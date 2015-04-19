@@ -5,6 +5,7 @@
  */
 package nvGlSamples.util;
 
+import jglm.Mat4;
 import jglm.Vec3;
 
 /**
@@ -19,9 +20,26 @@ public class NvInputTransformer {
     public NvInputTransformer() {
 
         motionMode = NvCameraMotionType.ORBITAL;
+
         xforms = new Transform[NvCameraXformType.COUNT.ordinal()];
+        for (int i = 0; i < NvCameraXformType.COUNT.ordinal(); i++) {
+            xforms[i] = new Transform();
+            
+            xforms[i].scale = 1f;
+            xforms[i].maxRotationVel = (float)Math.PI;
+            xforms[i].maxTranslationVel = 5f;
+        }
     }
-    
+
+    public Mat4 getModelViewMat() {
+        Transform xf = xforms[NvCameraXformType.MAIN.ordinal()];
+        if (motionMode == NvCameraMotionType.FIRST_PERSON) {
+            return xf.rotateMat.mult(xf.translateMat.mult(xf.scaleMat));
+        } else {
+            return xf.translateMat.mult(xf.rotateMat.mult(xf.scaleMat));
+        }
+    }
+
     public void setRotationVec(Vec3 vec) {
 
         xforms[NvCameraXformType.MAIN.ordinal()].rotate = vec;

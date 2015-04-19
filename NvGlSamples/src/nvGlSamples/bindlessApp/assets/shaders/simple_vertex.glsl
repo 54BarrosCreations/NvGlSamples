@@ -82,7 +82,8 @@ void main()
 
   if(UseBindlessUniforms)
   {
-    // For bindless uniforms, we pass in a pointer in GPU memory to the uniform data through a vertex attribute.
+    // For bindless uniforms, we pass in a pointer in GPU memory to the uniform 
+    // data through a vertex attribute.
     // We use this pointer to load the uniform data.
     // *** INTERESTING ***
     r = bindlessPerMeshUniformsPtr->r;

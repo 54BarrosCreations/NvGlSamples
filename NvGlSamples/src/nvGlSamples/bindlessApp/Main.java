@@ -20,7 +20,7 @@ public class Main {
      */
     public static void main(String[] args) {
 
-        final GlViewer glViewer = new GlViewer();
+        final BindlessApp glViewer = new BindlessApp();
 
         final Frame frame = new Frame("Order Independent Transparency");
 
