@@ -22,7 +22,7 @@ public class Main {
 
         final BindlessApp glViewer = new BindlessApp();
 
-        final Frame frame = new Frame("Order Independent Transparency");
+        final Frame frame = new Frame("Bindless Graphics");
 
         frame.add(glViewer.getNewtCanvasAWT());
 

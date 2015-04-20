@@ -29,6 +29,12 @@ public class Mesh {
     private int vertexCount;            // Number of vertices in mesh
     private int indexCount;             // Number of indices in mesh
 
+    public Mesh() {
+
+        vertexBuffer = new int[1];        
+        indexBuffer = new int[1];
+    }
+
     public void update(GL4 gl4, ArrayList<Vertex> vertices, ArrayList<Short> indices) {
 
         if (vertexBuffer[0] == 0) {
@@ -40,14 +46,14 @@ public class Mesh {
             gl4.glGenBuffers(1, indexBuffer, 0);
         }
         // Stick the data for the vertices and indices in their respective buffers
-        int vertexSize = vertices.get(0).toFloatArray().length;
-        float[] v = new float[vertices.size() * vertexSize];
+        int vertexLenght = vertices.get(0).toFloatArray().length;
+        float[] v = new float[vertices.size() * vertexLenght];
         for (int i = 0; i < vertices.size(); i++) {
             Vertex vertex = vertices.get(i);
-            System.arraycopy(vertex.toFloatArray(), 0, v, i * vertexSize, vertexSize);
+            System.arraycopy(vertex.toFloatArray(), 0, v, i * vertexLenght, vertexLenght);
         }
         FloatBuffer floatBuffer = GLBuffers.newDirectFloatBuffer(v);
-        gl4.glNamedBufferData(vertexBuffer[0], vertexSize * GLBuffers.SIZEOF_FLOAT,
+        gl4.glNamedBufferData(vertexBuffer[0], Vertex.size() * vertices.size(),
                 floatBuffer, GL4.GL_STATIC_DRAW);
 
         // *** INTERESTING ***
@@ -236,9 +242,58 @@ public class Mesh {
 
             // Do the actual drawing
             for (int i = 0; i < drawCallsPerState; i++) {
-                
+
                 gl4.glDrawElements(GL4.GL_TRIANGLES, indexCount, GL4.GL_UNSIGNED_SHORT, 0);
             }
         }
     }
+
+    /**
+     * Resets state related to the vertex format.
+     *
+     * @param gl4
+     */
+    public static void renderFinish(GL4 gl4) {
+
+        if (enableVBUM) {
+
+            // Reset state
+            gl4.glDisableVertexAttribArray(0);
+            gl4.glDisableVertexAttribArray(1);
+            gl4.glDisableVertexAttribArray(2);
+
+            // Disable a bunch of other attributes if we're using the heavy vertex format option
+            if (useHeavyVertexFormat) {
+
+                gl4.glDisableVertexAttribArray(3);
+                gl4.glDisableVertexAttribArray(4);
+                gl4.glDisableVertexAttribArray(5);
+                gl4.glDisableVertexAttribArray(6);
+                gl4.glDisableVertexAttribArray(7);
+            }
+
+            gl4.glDisableClientState(GL4.GL_VERTEX_ATTRIB_ARRAY_UNIFIED_NV);
+            gl4.glDisableClientState(GL4.GL_ELEMENT_ARRAY_UNIFIED_NV);
+
+        } else {
+
+            // Rendering with Vertex Array Objects (VAO)
+            // Reset state
+            gl4.glDisableVertexArrayAttrib(0, 0);
+            gl4.glDisableVertexArrayAttrib(0, 1);
+
+            // Disable a bunch of other attributes if we're using the heavy vertex format option
+            if (useHeavyVertexFormat) {
+
+                gl4.glDisableVertexArrayAttrib(0, 3);
+                gl4.glDisableVertexArrayAttrib(0, 4);
+                gl4.glDisableVertexArrayAttrib(0, 5);
+                gl4.glDisableVertexArrayAttrib(0, 6);
+                gl4.glDisableVertexArrayAttrib(0, 7);
+            }
+
+            gl4.glBindBuffer(GL4.GL_ELEMENT_ARRAY_BUFFER, 0);
+        }
+    }
+
 }

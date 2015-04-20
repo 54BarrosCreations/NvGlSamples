@@ -55,8 +55,7 @@ public class Vertex {
         float[] result = new float[3 + 1 + 4 * 7];
 
         System.arraycopy(position, 0, result, 0, position.length);
-        float c = color[0] << 24 | color[1] << 16 | color[2] << 8 | color[3];
-        result[3] = c;
+        result[3] = color[0] << 24 | color[1] << 16 | color[2] << 8 | color[3];
         System.arraycopy(attrib0, 0, result, 4 + 4 * 0, attrib0.length);
         System.arraycopy(attrib1, 0, result, 4 + 4 * 1, attrib1.length);
         System.arraycopy(attrib2, 0, result, 4 + 4 * 2, attrib2.length);
