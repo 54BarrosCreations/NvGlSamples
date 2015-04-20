@@ -67,6 +67,7 @@ public class Mesh {
          * Here they dont work, it seems you have to bind the corresponding
          * buffers before or switching glGenBuffer to glCreateBuffer.
          * http://stackoverflow.com/questions/29743881/glnamedbufferdata-fires-gl-invalid-operation
+         * https://www.opengl.org/discussion_boards/showthread.php/186134-glNamedBufferData-fires-GL_INVALID_OPERATION
          */
         gl4.glNamedBufferData(vertexBuffer[0], Vertex.size() * vertices.size(),
                 GLBuffers.newDirectFloatBuffer(verticesArray), GL4.GL_STATIC_DRAW);
@@ -105,7 +106,7 @@ public class Mesh {
      * @param gl4
      */
     public static void renderPrep(GL4 gl4) {
-
+        System.out.println("renderPrep");
         if (enableVBUM) {
 
             /**
@@ -115,6 +116,8 @@ public class Mesh {
             gl4.glVertexAttribFormatNV(0, 3, GL4.GL_FLOAT, false, Vertex.size());
             // Color in attribute 1 that is 4 unsigned bytes
             gl4.glVertexAttribFormatNV(1, 4, GL4.GL_UNSIGNED_BYTE, true, Vertex.size());
+
+            gl4.glVertexFormatNV(3, GL4.GL_FLOAT, Vertex.size());
 
             // Enable the relevent attributes
             gl4.glEnableVertexAttribArray(0);
@@ -167,7 +170,7 @@ public class Mesh {
      * @param gl4
      */
     public void render(GL4 gl4) {
-
+        System.out.println("render");
         if (vertexBuffer[0] == 0) {
             System.out.println("Error, vertexBuffer == 0");
         }
@@ -184,9 +187,11 @@ public class Mesh {
             // The GPU pointer to the vertex buffer was stored in Mesh::update() 
             // after the buffer was filled
             gl4.glBufferAddressRangeNV(GL4.GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, 0,
+                    //            gl4.glBufferAddressRangeNV(GL4.GL_VERTEX_ARRAY_ADDRESS_NV, 0,
                     vertexBufferGPUPtr[0] + Vertex.positionOffset,
                     vertexBufferSize[0] - Vertex.positionOffset);
             gl4.glBufferAddressRangeNV(GL4.GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, 1,
+                    //            gl4.glBufferAddressRangeNV(GL4.GL_VERTEX_ARRAY_ADDRESS_NV, 1,
                     vertexBufferGPUPtr[0] + Vertex.colorOffset,
                     vertexBufferSize[0] - Vertex.colorOffset);
 
