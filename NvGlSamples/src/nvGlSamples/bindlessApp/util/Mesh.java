@@ -7,7 +7,6 @@ package nvGlSamples.bindlessApp.util;
 
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 /**
@@ -31,30 +30,48 @@ public class Mesh {
 
     public Mesh() {
 
-        vertexBuffer = new int[1];        
+        vertexBuffer = new int[1];
         indexBuffer = new int[1];
+
+        vertexBufferGPUPtr = new long[1];
+        vertexBufferSize = new int[1];
+
+        indexBufferGPUPtr = new long[1];
+        indexBufferSize = new int[1];
+
+        indexBufferGPUPtr = new long[1];
     }
 
     public void update(GL4 gl4, ArrayList<Vertex> vertices, ArrayList<Short> indices) {
 
         if (vertexBuffer[0] == 0) {
 
-            gl4.glGenBuffers(1, vertexBuffer, 0);
+            gl4.glCreateBuffers(1, vertexBuffer, 0);
         }
         if (indexBuffer[0] == 0) {
 
-            gl4.glGenBuffers(1, indexBuffer, 0);
+            gl4.glCreateBuffers(1, indexBuffer, 0);
         }
         // Stick the data for the vertices and indices in their respective buffers
         int vertexLenght = vertices.get(0).toFloatArray().length;
-        float[] v = new float[vertices.size() * vertexLenght];
+        float[] verticesArray = new float[vertices.size() * vertexLenght];
         for (int i = 0; i < vertices.size(); i++) {
             Vertex vertex = vertices.get(i);
-            System.arraycopy(vertex.toFloatArray(), 0, v, i * vertexLenght, vertexLenght);
+            System.arraycopy(vertex.toFloatArray(), 0, verticesArray, i * vertexLenght, vertexLenght);
         }
-        FloatBuffer floatBuffer = GLBuffers.newDirectFloatBuffer(v);
+        short[] indicesArray = new short[indices.size()];
+        for (int i = 0; i < indices.size(); i++) {
+            indicesArray[i] = indices.get(i);
+        }
+        /**
+         * Here they dont work, it seems you have to bind the corresponding
+         * buffers before or switching glGenBuffer to glCreateBuffer.
+         * http://stackoverflow.com/questions/29743881/glnamedbufferdata-fires-gl-invalid-operation
+         */
         gl4.glNamedBufferData(vertexBuffer[0], Vertex.size() * vertices.size(),
-                floatBuffer, GL4.GL_STATIC_DRAW);
+                GLBuffers.newDirectFloatBuffer(verticesArray), GL4.GL_STATIC_DRAW);
+        gl4.glNamedBufferData(indexBuffer[0], GLBuffers.SIZEOF_SHORT * indices.size(),
+                GLBuffers.newDirectShortBuffer(indicesArray), GL4.GL_STATIC_DRAW);
 
         // *** INTERESTING ***
         // get the GPU pointer for the vertex buffer and make the vertex buffer 
@@ -84,6 +101,8 @@ public class Mesh {
 
     /**
      * Sets up the vertex format state.
+     *
+     * @param gl4
      */
     public static void renderPrep(GL4 gl4) {
 

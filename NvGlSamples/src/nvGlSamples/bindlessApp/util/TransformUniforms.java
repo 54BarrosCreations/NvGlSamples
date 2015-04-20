@@ -19,7 +19,7 @@ public class TransformUniforms {
     public int useBindlessUniforms;
 
     public static int size() {
-        return 16 * 4 * 2 * GLBuffers.SIZEOF_FLOAT + 1 * GLBuffers.SIZEOF_INT;
+        return 16 * 2 * GLBuffers.SIZEOF_FLOAT + 1 * GLBuffers.SIZEOF_INT;
     }
 
     public float[] toFloatarray() {

@@ -44,6 +44,7 @@ import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.GLBuffers;
+import com.jogamp.opengl.util.texture.TextureIO;
 import glsl.GLSLProgramObject;
 import glutil.ViewPole;
 import java.io.IOException;
@@ -145,7 +146,11 @@ public class BindlessApp implements GLEventListener {
         initGL();
 
         useBindlessUniforms = true;
+        updateUniformsEveryFrame = true;
+        usePerMeshUniforms = true;
         useBindlessTextures = false;
+
+        perMeshUniformsGPUPtr = new long[1];
 
         minimumFrameDeltaTime = 1e6f;
         t = 0f;
@@ -181,7 +186,7 @@ public class BindlessApp implements GLEventListener {
         // Create our pixel and vertex shader
         shader = new GLSLProgramObject(gl4, assetShaders, new String[]{"simple_vertex.glsl"},
                 new String[]{"simple_fragment.glsl"});
-        bindlessPerMeshUniformsPtrAttribLocation = gl4.glGetUniformLocation(
+        bindlessPerMeshUniformsPtrAttribLocation = gl4.glGetAttribLocation(
                 shader.getProgramId(), "bindlessPerMeshUniformsPtr");
 
         // Set the initial view
@@ -189,14 +194,17 @@ public class BindlessApp implements GLEventListener {
         transformer.setRotationVec(new Vec3((float) Math.toRadians(30f),
                 (float) Math.toRadians(30f), 0));
         transformUniformsData = new TransformUniforms();
-        
+
         // Create the meshes
         meshes = new Mesh[1 + SQRT_BUILDING_COUNT * SQRT_BUILDING_COUNT];
         perMeshUniformsData = new PerMeshUniforms[meshes.length];
-        
+        for (int i = 0; i < meshes.length; i++) {
+            perMeshUniformsData[i] = new PerMeshUniforms();
+        }
+
         // Create a mesh for the ground
         meshes[0] = createGround(gl4, new Vec3(0f, -.001f, 0f), new Vec3(5f, 0f, 5f));
-        
+
         // Create "building" meshes
         int meshIndex = 0;
         for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
@@ -220,22 +228,21 @@ public class BindlessApp implements GLEventListener {
                 meshIndex++;
             }
         }
-        System.out.println("d");
         // Initialize Bindless Textures
         initBindlessTextures(gl4);
 
         // create Uniform Buffer Object (UBO) for transform data and initialize 
         transformUniforms = new int[1];
-        gl4.glGenBuffers(1, transformUniforms, 0);
-        gl4.glNamedBufferData(transformUniforms[0], TransformUniforms.size(), null,
-                GL4.GL_STATIC_DRAW);
+        gl4.glCreateBuffers(1, transformUniforms, 0);
+        gl4.glNamedBufferData(transformUniforms[0], TransformUniforms.size(), null, GL4.GL_STATIC_DRAW);
 
         // create Uniform Buffer Object (UBO) for param data and initialize
         perMeshUniforms = new int[1];
-        gl4.glGenBuffers(1, perMeshUniforms, 0);
+        gl4.glCreateBuffers(1, perMeshUniforms, 0);
 
         // Initialize the per mesh Uniforms
         updatePerMeshUniforms(gl4, 0f);
+
         checkError(gl4);
 
         frameTime = System.currentTimeMillis();
@@ -243,6 +250,10 @@ public class BindlessApp implements GLEventListener {
     }
 
     private void checkExtenstions(GL4 gl4) {
+
+        System.out.println("gl4.glGetString(GL4.GL_VERSION) " + gl4.glGetString(GL4.GL_VERSION));
+
+        System.out.println("gl4.isExtensionAvailable(\"GL_ARB_direct_state_access\" " + gl4.isExtensionAvailable("GL_ARB_direct_state_access"));
 
         boolean GL_NV_vertex_buffer_unified_memory = gl4.isExtensionAvailable("GL_NV_vertex_buffer_unified_memory");
         if (!GL_NV_vertex_buffer_unified_memory) {
@@ -428,7 +439,7 @@ public class BindlessApp implements GLEventListener {
         for (int i = 0; i < TEXTURE_FRAME_COUNT; i++) {
 
             try {
-                textureIds[i] = NvImage.uploadTextureFromDDSFile(gl4, filename);
+                textureIds[i] = NvImage.uploadTextureFromDDSFile(gl4, filename + "NV" + i + "." + TextureIO.DDS);
             } catch (IOException ex) {
                 Logger.getLogger(BindlessApp.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -484,7 +495,7 @@ public class BindlessApp implements GLEventListener {
             // Give the uniform data to the GPU
             float[] fb = new float[perMeshUniformsData.length * 6];
             for (int i = 0; i < perMeshUniformsData.length; i++) {
-                System.arraycopy(perMeshUniformsData, 0, fb, i * 6, 6);
+                System.arraycopy(perMeshUniformsData[i].toFloatbuffer(), 0, fb, i * 6, 6);
             }
             FloatBuffer floatBuffer = GLBuffers.newDirectFloatBuffer(fb);
             gl4.glNamedBufferData(perMeshUniforms[0], 6 * GLBuffers.SIZEOF_FLOAT,
@@ -532,122 +543,121 @@ public class BindlessApp implements GLEventListener {
      */
     @Override
     public void display(GLAutoDrawable glad) {
-        System.out.println("display");
+//        System.out.println("display");
         GL4 gl4 = glad.getGL().getGL4();
 
-//        Mat4 modelviewMatrix;
-//
-//        gl4.glClearColor(.5f, .5f, .5f, 1f);
-//        gl4.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT);
-//        gl4.glEnable(GL4.GL_DEPTH_TEST);
-//
-//        // Enable the vertex and pixel shader
-//        shader.bind(gl4);
-//
-//        if (useBindlessTextures) {
-//            int samplersLocation = gl4.glGetUniformLocation(shader.getProgramId(), "samplers");
-//            gl4.glUniformHandleui64vARB(samplersLocation, TEXTURE_FRAME_COUNT,
-//                    textureHandles, 0);
-//        }
-//
-//        int bindlessTexture = gl4.glGetUniformLocation(shader.getProgramId(), "useBindless");
-//        gl4.glUniform1i(bindlessTexture, useBindlessTextures ? 1 : 0);
-//
-//        int currentTexture = gl4.glGetUniformLocation(shader.getProgramId(), "currentFrame");
-//        gl4.glUniform1i(currentTexture, currentFrame);
-//
-//        // Set up the transformation matices up
-//        modelviewMatrix = transformer.getModelViewMat();
-//        transformUniformsData.modelView = modelviewMatrix;
-//        transformUniformsData.modelViewProjection = projectionMatrix.mult(modelviewMatrix);
-//        transformUniformsData.useBindlessUniforms = useBindlessUniforms ? 1 : 0;
-//        gl4.glBindBufferBase(GL4.GL_UNIFORM_BUFFER, 2, transformUniforms[0]);
-//        gl4.glNamedBufferSubData(transformUniforms[0], 0, TransformUniforms.size(),
-//                GLBuffers.newDirectFloatBuffer(transformUniformsData.toFloatarray()));
-//
-//        // If we are going to update the uniforms every frame, do it now
-//        if (updateUniformsEveryFrame) {
-//            float deltaTime;
-//            float dt;
-//
-//            deltaTime = getFrameDeltaTime();
-//            if (deltaTime < minimumFrameDeltaTime) {
-//                minimumFrameDeltaTime = deltaTime;
-//            }
-//            dt = Math.min(.00005f / minimumFrameDeltaTime, .01f);
-//            t += dt * Mesh.drawCallsPerState;
-//
-//            updatePerMeshUniforms(gl4, t);
-//        }
-//
-//        // Set up default per mesh uniforms. These may be changed on a per mesh 
-//        // basis in the rendering loop below 
-//        if (useBindlessUniforms) {
-//            // *** INTERESTING ***
-//            // Pass a GPU pointer to the vertex shader for the per mesh uniform 
-//            // data via a vertex attribute
-//            gl4.glVertexAttribI2i(bindlessPerMeshUniformsPtrAttribLocation,
-//                    (int) (perMeshUniformsGPUPtr[0] & 0xFFFFFFFF),
-//                    (int) ((perMeshUniformsGPUPtr[0] >> 32) & 0xFFFFFFFF));
-//        } else {
-//            gl4.glBindBufferBase(GL4.GL_UNIFORM_BUFFER, 3, perMeshUniforms[0]);
-//            FloatBuffer fb = GLBuffers.newDirectFloatBuffer(perMeshUniformsData[0].toFloatbuffer());
-//            gl4.glNamedBufferSubData(perMeshUniforms[0], 0, 6, fb);
-//        }
-//
-//        // If all of the meshes are sharing the same vertex format, we can just 
-//        // set the vertex format once
-//        if (!Mesh.setVertexFormatOnEveryDrawCall) {
-//            Mesh.renderPrep(gl4);
-//        }
-//
-//        // Render all of the meshes
-//        for (int i = 0; i < meshes.length; i++) {
-//
-//            // If enabled, update the per mesh uniforms for each mesh rendered
-//            if (usePerMeshUniforms) {
-//
-//                if (useBindlessUniforms) {
-//
-//                    long perMeshUniformsGPUPtr_;
-//
-//                    // *** INTERESTING ***
-//                    // Compute a GPU pointer for the per mesh uniforms for this mesh
-//                    perMeshUniformsGPUPtr_ = perMeshUniformsGPUPtr[0]
-//                            + PerMeshUniforms.size() * i;
-//                    // Pass a GPU pointer to the vertex shader for the per mesh 
-//                    // uniform data via a vertex attribute
-//                    gl4.glVertexAttribI2i(bindlessPerMeshUniformsPtrAttribLocation,
-//                            (int) (perMeshUniformsGPUPtr_ & 0xFFFFFFFF),
-//                            (int) ((perMeshUniformsGPUPtr_ >> 32) & 0xFFFFFFFF));
-//                } else {
-//
-//                    gl4.glBindBufferBase(GL4.GL_UNIFORM_BUFFER, 3, perMeshUniforms[0]);
-//                    gl4.glNamedBufferSubData(perMeshUniforms[0], 0, PerMeshUniforms.size(),
-//                            GLBuffers.newDirectFloatBuffer(perMeshUniformsData[0].toFloatbuffer()));
-//                }
-//            }
-//
-//            // If we're not sharing vertex formats between meshes, we have to 
-//            // set the vertex format everytime it changes.
-//            if (Mesh.setVertexFormatOnEveryDrawCall) {
-//                Mesh.renderPrep(gl4);
-//            }
-//
-//            // Now that everything is set up, do the actual rendering
-//            // The code that selects between rendering with Vertex Array Objects 
-//            // (VAO) and Vertex Buffer Unified Memory (VBUM) is located in 
-//            // Mesh::render(). The code that gets the GPU pointer for use with 
-//            // VBUM rendering is located in Mesh::update()
-//            meshes[i].render(gl4);
-//
-//            // If we're not sharing vertex formats between meshes, we have to 
-//            // reset the vertex format to a default state after each mesh
-//            if (Mesh.useHeavyVertexFormat) {
-//
-//                Mesh.renderFinish(gl4);
-//            }
-//        }
+        Mat4 modelviewMatrix;
+
+        gl4.glClearColor(.5f, .5f, .5f, 1f);
+        gl4.glClear(GL4.GL_COLOR_BUFFER_BIT | GL4.GL_DEPTH_BUFFER_BIT);
+        gl4.glEnable(GL4.GL_DEPTH_TEST);
+
+        // Enable the vertex and pixel shader
+        shader.bind(gl4);
+
+        if (useBindlessTextures) {
+            int samplersLocation = gl4.glGetUniformLocation(shader.getProgramId(), "samplers");
+            gl4.glUniformHandleui64vARB(samplersLocation, TEXTURE_FRAME_COUNT, textureHandles, 0);
+        }
+
+        int bindlessTexture = gl4.glGetUniformLocation(shader.getProgramId(), "useBindless");
+        gl4.glUniform1i(bindlessTexture, useBindlessTextures ? 1 : 0);
+
+        int currentTexture = gl4.glGetUniformLocation(shader.getProgramId(), "currentFrame");
+        gl4.glUniform1i(currentTexture, currentFrame);
+
+        // Set up the transformation matices up
+        modelviewMatrix = transformer.getModelViewMat();
+        transformUniformsData.modelView = modelviewMatrix;
+        transformUniformsData.modelViewProjection = projectionMatrix.mult(modelviewMatrix);
+        transformUniformsData.useBindlessUniforms = useBindlessUniforms ? 1 : 0;
+        gl4.glBindBufferBase(GL4.GL_UNIFORM_BUFFER, 2, transformUniforms[0]);
+        gl4.glNamedBufferSubData(transformUniforms[0], 0, TransformUniforms.size(),
+                GLBuffers.newDirectFloatBuffer(transformUniformsData.toFloatarray()));
+
+        // If we are going to update the uniforms every frame, do it now
+        if (updateUniformsEveryFrame) {
+            float deltaTime;
+            float dt;
+
+            deltaTime = getFrameDeltaTime();
+            if (deltaTime < minimumFrameDeltaTime) {
+                minimumFrameDeltaTime = deltaTime;
+            }
+            dt = Math.min(.00005f / minimumFrameDeltaTime, .01f);
+            t += dt * Mesh.drawCallsPerState;
+
+            updatePerMeshUniforms(gl4, t);
+        }
+
+        // Set up default per mesh uniforms. These may be changed on a per mesh 
+        // basis in the rendering loop below 
+        if (useBindlessUniforms) {
+            // *** INTERESTING ***
+            // Pass a GPU pointer to the vertex shader for the per mesh uniform 
+            // data via a vertex attribute
+            gl4.glVertexAttribI2i(bindlessPerMeshUniformsPtrAttribLocation,
+                    (int) (perMeshUniformsGPUPtr[0] & 0xFFFFFFFF),
+                    (int) ((perMeshUniformsGPUPtr[0] >> 32) & 0xFFFFFFFF));
+        } else {
+            gl4.glBindBufferBase(GL4.GL_UNIFORM_BUFFER, 3, perMeshUniforms[0]);
+            FloatBuffer fb = GLBuffers.newDirectFloatBuffer(perMeshUniformsData[0].toFloatbuffer());
+            gl4.glNamedBufferSubData(perMeshUniforms[0], 0, 6, fb);
+        }
+
+        // If all of the meshes are sharing the same vertex format, we can just 
+        // set the vertex format once
+        if (!Mesh.setVertexFormatOnEveryDrawCall) {
+            Mesh.renderPrep(gl4);
+        }
+
+        // Render all of the meshes
+        for (int i = 0; i < meshes.length; i++) {
+
+            // If enabled, update the per mesh uniforms for each mesh rendered
+            if (usePerMeshUniforms) {
+
+                if (useBindlessUniforms) {
+
+                    long perMeshUniformsGPUPtr_;
+
+                    // *** INTERESTING ***
+                    // Compute a GPU pointer for the per mesh uniforms for this mesh
+                    perMeshUniformsGPUPtr_ = perMeshUniformsGPUPtr[0]
+                            + PerMeshUniforms.size() * i;
+                    // Pass a GPU pointer to the vertex shader for the per mesh 
+                    // uniform data via a vertex attribute
+                    gl4.glVertexAttribI2i(bindlessPerMeshUniformsPtrAttribLocation,
+                            (int) (perMeshUniformsGPUPtr_ & 0xFFFFFFFF),
+                            (int) ((perMeshUniformsGPUPtr_ >> 32) & 0xFFFFFFFF));
+                } else {
+
+                    gl4.glBindBufferBase(GL4.GL_UNIFORM_BUFFER, 3, perMeshUniforms[0]);
+                    gl4.glNamedBufferSubData(perMeshUniforms[0], 0, PerMeshUniforms.size(),
+                            GLBuffers.newDirectFloatBuffer(perMeshUniformsData[0].toFloatbuffer()));
+                }
+            }
+
+            // If we're not sharing vertex formats between meshes, we have to 
+            // set the vertex format everytime it changes.
+            if (Mesh.setVertexFormatOnEveryDrawCall) {
+                Mesh.renderPrep(gl4);
+            }
+
+            // Now that everything is set up, do the actual rendering
+            // The code that selects between rendering with Vertex Array Objects 
+            // (VAO) and Vertex Buffer Unified Memory (VBUM) is located in 
+            // Mesh::render(). The code that gets the GPU pointer for use with 
+            // VBUM rendering is located in Mesh::update()
+            meshes[i].render(gl4);
+
+            // If we're not sharing vertex formats between meshes, we have to 
+            // reset the vertex format to a default state after each mesh
+            if (Mesh.useHeavyVertexFormat) {
+
+                Mesh.renderFinish(gl4);
+            }
+        }
 //
 //        // If we're sharing vertex formats between meshes, we only have to reset 
 //        // vertex format to a default state once
@@ -661,9 +671,7 @@ public class BindlessApp implements GLEventListener {
 //
 //        // Update the rendering stats in the UI
 //        float drawCallsPerSecond;
-
         checkError(gl4);
-
         frameTime = System.currentTimeMillis();
     }
 

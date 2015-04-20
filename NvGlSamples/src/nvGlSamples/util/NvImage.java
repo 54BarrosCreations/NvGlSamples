@@ -12,6 +12,7 @@ import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 import com.jogamp.opengl.util.texture.spi.DDSImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 
 /**
  *
@@ -19,19 +20,21 @@ import java.io.IOException;
  */
 public class NvImage {
 
-    public static int uploadTextureFromDDSFile(GL4 gl4, String filename) throws IOException {
+    public static int uploadTextureFromDDSFile(GL4 gl4, String filePath) throws IOException {
 
-        DDSImage ddsImage = DDSImage.read(filename);
+        URL url = NvImage.class.getResource(filePath);
+        File file = new File(url.getPath());
 
-        TextureData textureData = TextureIO.newTextureData(gl4.getGLProfile(),
-                new File(filename), true, TextureIO.DDS);
-        
-        int texID = uploadTexture(gl4, ddsImage, textureData);
-        
+        DDSImage ddsImage = DDSImage.read(file);
+
+        TextureData textureData = TextureIO.newTextureData(gl4.getGLProfile(), file, false, TextureIO.DDS);
+
+        int texID = uploadTextureFromDDSData(gl4, ddsImage, textureData);
+
         return texID;
     }
 
-    public static int uploadTexture(GL4 gl4, DDSImage ddsImage, TextureData textureData) {
+    private static int uploadTextureFromDDSData(GL4 gl4, DDSImage ddsImage, TextureData textureData) {
 
         int[] texID = new int[1];
 
@@ -66,27 +69,53 @@ public class NvImage {
         } else {
             gl4.glBindTexture(GL4.GL_TEXTURE_2D, texID[0]);
 
-            for (int l = 0; l < ddsImage.getNumMipMaps(); l++) {
-
-                DDSImage.ImageInfo mipmap = ddsImage.getMipMap(l);
-
-                int w = mipmap.getWidth();
-                int h = mipmap.getHeight();
+            if (ddsImage.getNumMipMaps() == 0) {
 
                 if (ddsImage.isCompressed()) {
 
-                    gl4.glCompressedTexImage2D(GL4.GL_TEXTURE_2D, l,
-                            ddsImage.getCompressionFormat(), w, h, 0,
-                            mipmap.getData().capacity(), mipmap.getData());
+                    gl4.glCompressedTexImage2D(GL4.GL_TEXTURE_2D, 0, ddsImage.getCompressionFormat(),
+                            ddsImage.getWidth(), ddsImage.getHeight(), 0,
+                            textureData.getBuffer().capacity(), textureData.getBuffer());
                 } else {
+//                    System.out.println("textureData.getInternalFormat() " + textureData.getInternalFormat());
+//                    System.out.println("textureData.getPixelFormat() " + textureData.getPixelFormat());
+//                    System.out.println("textureData.getPixelType() " + textureData.getPixelType());
+//                    System.out.println("ddsImage.getCompressionFormat() " + ddsImage.getCompressionFormat());
+//                    System.out.println("ddsImage.getPixelFormat() " + ddsImage.getPixelFormat());
+//                    gl4.glTexImage2D(GL4.GL_TEXTURE_2D, 0, GL4.GL_RGB8, ddsImage.getWidth(), ddsImage.getHeight(), 0,
+//                            textureData.getPixelFormat(), textureData.getPixelType(), textureData.getBuffer());
+                    gl4.glTexImage2D(GL4.GL_TEXTURE_2D, 0, GL4.GL_RGB8, ddsImage.getWidth(), ddsImage.getHeight(), 0,
+                            GL4.GL_BGR, textureData.getPixelType(), textureData.getBuffer());
+                }
 
-                    gl4.glTexImage2D(GL4.GL_TEXTURE_2D, l, textureData.getInternalFormat(),
-                            w, h, 0, textureData.getPixelFormat(), textureData.getPixelType(),
-                            mipmap.getData());
+            } else {
+
+                for (int l = 0; l < ddsImage.getNumMipMaps(); l++) {
+
+                    DDSImage.ImageInfo mipmap = ddsImage.getMipMap(l);
+
+                    int w = mipmap.getWidth();
+                    int h = mipmap.getHeight();
+
+                    if (ddsImage.isCompressed()) {
+
+                        gl4.glCompressedTexImage2D(GL4.GL_TEXTURE_2D, l,
+                                ddsImage.getCompressionFormat(), w, h, 0,
+                                mipmap.getData().capacity(), mipmap.getData());
+                    } else {
+
+                        gl4.glTexImage2D(GL4.GL_TEXTURE_2D, l, textureData.getInternalFormat(),
+                                w, h, 0, textureData.getPixelFormat(), textureData.getPixelType(),
+                                mipmap.getData());
+                    }
                 }
             }
             gl4.glBindTexture(GL4.GL_TEXTURE_2D, 0);
         }
         return texID[0];
+    }
+
+    private static void uploadTexture(GL4 gl4) {
+
     }
 }
