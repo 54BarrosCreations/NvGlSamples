@@ -40,8 +40,11 @@ public class NvInputTransformer {
         }
     }
 
-    public void setRotationVec(Vec3 vec) {
+    public void setTranslationVec(Vec3 vec) {
+        xforms[NvCameraXformType.MAIN.ordinal()].translate = vec;
+    }
 
+    public void setRotationVec(Vec3 vec) {
         xforms[NvCameraXformType.MAIN.ordinal()].rotate = vec;
     }
 

@@ -143,9 +143,7 @@ public class BindlessApp implements GLEventListener {
 
     public BindlessApp() {
 
-        initGL();
-
-        useBindlessUniforms = true;
+        useBindlessUniforms = false;
         updateUniformsEveryFrame = true;
         usePerMeshUniforms = true;
         useBindlessTextures = false;
@@ -154,24 +152,6 @@ public class BindlessApp implements GLEventListener {
 
         minimumFrameDeltaTime = 1e6f;
         t = 0f;
-    }
-
-    private void initGL() {
-
-        GLProfile gLProfile = GLProfile.getDefault();
-
-        GLCapabilities gLCapabilities = new GLCapabilities(gLProfile);
-
-        glWindow = GLWindow.create(gLCapabilities);
-
-        newtCanvasAWT = new NewtCanvasAWT(glWindow);
-
-        glWindow.setSize(1024, 768);
-
-        glWindow.addGLEventListener(this);
-
-        animator = new Animator(glWindow);
-        animator.start();
     }
 
     @Override
@@ -658,19 +638,20 @@ public class BindlessApp implements GLEventListener {
                 Mesh.renderFinish(gl4);
             }
         }
-//
-//        // If we're sharing vertex formats between meshes, we only have to reset 
-//        // vertex format to a default state once
-//        if (!Mesh.setVertexFormatOnEveryDrawCall) {
-//
-//            Mesh.renderFinish(gl4);
-//        }
-//
-//        // Disable the vertex and pixel shader
-//        shader.unbind(gl4);
-//
-//        // Update the rendering stats in the UI
-//        float drawCallsPerSecond;
+
+        // If we're sharing vertex formats between meshes, we only have to reset 
+        // vertex format to a default state once
+        if (!Mesh.setVertexFormatOnEveryDrawCall) {
+
+            Mesh.renderFinish(gl4);
+        }
+
+        // Disable the vertex and pixel shader
+        shader.unbind(gl4);
+
+        // Update the rendering stats in the UI
+        float drawCallsPerSecond;
+
         checkError(gl4);
         frameTime = System.currentTimeMillis();
     }

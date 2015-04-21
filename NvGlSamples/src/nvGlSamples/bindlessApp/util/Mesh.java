@@ -17,7 +17,7 @@ public class Mesh {
 
     public static int drawCallsPerState = 1;
     public static boolean setVertexFormatOnEveryDrawCall = false;
-    public static boolean enableVBUM = true;
+    public static boolean enableVBUM = false;
     public static boolean useHeavyVertexFormat = false;
     private int[] vertexBuffer;         // vertex buffer object for vertices
     private int[] indexBuffer;          // vertex buffer object for indices
