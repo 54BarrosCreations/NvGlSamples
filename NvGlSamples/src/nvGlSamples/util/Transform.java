@@ -22,6 +22,7 @@ public class Transform {
     public Vec3 translate;
     public Vec3 rotate;
     public float scale;
+    public float dScale;
 
     public Mat4 translateMat;
     public Mat4 rotateMat;

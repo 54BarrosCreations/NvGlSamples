@@ -19,8 +19,8 @@ public class Mesh {
     public static boolean setVertexFormatOnEveryDrawCall = false;
     public static boolean enableVBUM = false;
     public static boolean useHeavyVertexFormat = false;
-    private int[] vertexBuffer;         // vertex buffer object for vertices
-    private int[] indexBuffer;          // vertex buffer object for indices
+    protected int[] vertexBuffer;         // vertex buffer object for vertices
+    protected int[] indexBuffer;          // vertex buffer object for indices
     private long[] vertexBufferGPUPtr;  // GPU pointer to m_vertexBuffer data
     private int[] vertexBufferSize;
     private long[] indexBufferGPUPtr;   // GPU pointer to m_indexBuffer data
@@ -38,8 +38,6 @@ public class Mesh {
 
         indexBufferGPUPtr = new long[1];
         indexBufferSize = new int[1];
-
-        indexBufferGPUPtr = new long[1];
     }
 
     public void update(GL4 gl4, ArrayList<Vertex> vertices, ArrayList<Short> indices) {
@@ -106,9 +104,8 @@ public class Mesh {
      * @param gl4
      */
     public static void renderPrep(GL4 gl4) {
-        System.out.println("renderPrep");
-        if (enableVBUM) {
 
+        if (enableVBUM) {
             /**
              * Specify the vertex format.
              */
@@ -170,7 +167,7 @@ public class Mesh {
      * @param gl4
      */
     public void render(GL4 gl4) {
-        System.out.println("render");
+
         if (vertexBuffer[0] == 0) {
             System.out.println("Error, vertexBuffer == 0");
         }

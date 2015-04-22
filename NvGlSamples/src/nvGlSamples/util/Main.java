@@ -21,19 +21,19 @@ public class Main {
      */
     public static void main(String[] args) {
 
-        final NvSampleApp sampleApp = new NvSampleApp();
+        final BindlessApp bindlessApp = new BindlessApp();
 
         final Frame frame = new Frame("Bindless Graphics");
 
-        frame.add(sampleApp.getNewtCanvasAWT());
+        frame.add(bindlessApp.getNewtCanvasAWT());
 
-        frame.setSize(sampleApp.getGlWindow().getWidth(), sampleApp.getGlWindow().getHeight());
+        frame.setSize(bindlessApp.getGlWindow().getWidth(), bindlessApp.getGlWindow().getHeight());
 
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent windowEvent) {
-                sampleApp.getAnimator().stop();
-                sampleApp.getGlWindow().destroy();
+                bindlessApp.getAnimator().stop();
+                bindlessApp.getGlWindow().destroy();
                 frame.dispose();
                 System.exit(0);
             }

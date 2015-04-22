@@ -45,8 +45,9 @@ public class NvStopWatch {
         }
     }
 
-    public long getTime() {
-        return running ? getDiffTime() : diffTime;
+    public float getTime() {
+        float ms = running ? getDiffTime() : diffTime;
+        return ms / 1000;
     }
 
     /**
@@ -54,7 +55,7 @@ public class NvStopWatch {
      *
      * @return
      */
-    public long getDiffTime() {
+    private long getDiffTime() {
         return System.currentTimeMillis() - startTime;
     }
 }

@@ -19,14 +19,18 @@ public class NvSampleApp extends NvAppBase {
     protected NvStopWatch drawTimer;
     private long totalTime;
     private long frameTime;
+    protected float frameDelta;
 
     public NvSampleApp() {
+
+        super();
 
         transformer = new NvInputTransformer();
 
         frameTimer = new NvStopWatch();
+        frameTimer.start();
         drawTimer = new NvStopWatch();
-        
+
         totalTime = (long) -1e6;
     }
 
@@ -47,7 +51,6 @@ public class NvSampleApp extends NvAppBase {
         gl4.glGetIntegerv(GL4.GL_NUM_EXTENSIONS, count, 0);
         System.out.println("GL_EXTENSIONS = ");
         int lineMaxLen = 80;
-        int currLen;
         String currExt, currLine = gl4.glGetStringi(GL4.GL_EXTENSIONS, 0);
         for (int i = 1; i < count[0]; i++) {
 
@@ -67,21 +70,54 @@ public class NvSampleApp extends NvAppBase {
         System.out.println("" + currLine);
 
         glad.setAutoSwapBufferMode(false);
+//        System.out.println("gl4.getSwapInterval() " + gl4.getSwapInterval());
+        animator.setRunAsFastAsPossible(true);
+        animator.setUpdateFPSFrames(60, System.out);
+
+        initRendering(gl4);
+    }
+
+    protected void initRendering(GL4 gl4) {
+
     }
 
     @Override
     public void display(GLAutoDrawable glad) {
 
-        frameTimer.start();
+        frameTimer.stop();
+
+        frameDelta = frameTimer.getTime();
+
+        // just an estimate
+        totalTime += frameDelta;
+
+        transformer.update(frameDelta);
+
+        frameTimer.reset();
 
         GL4 gl4 = glad.getGL().getGL4();
 
+        frameTimer.start();
         drawTimer.start();
 
         draw(gl4);
+
+        checkGlError(gl4);
+
+        glad.swapBuffers();
+
+        drawTimer.stop();
+        drawTimer.reset();
     }
 
     public void draw(GL4 gl4) {
 
+    }
+
+    protected void checkGlError(GL4 gl4) {
+        int error = gl4.glGetError();
+        if (error != GL4.GL_NO_ERROR) {
+            System.out.println("error " + error);
+        }
     }
 }

@@ -21,7 +21,7 @@ public class NvAppBase implements GLEventListener {
 
     private GLWindow glWindow;
     private NewtCanvasAWT newtCanvasAWT;
-    private Animator animator;
+    protected Animator animator;
 
     public NvAppBase() {
         initGL();
@@ -37,7 +37,7 @@ public class NvAppBase implements GLEventListener {
 
         newtCanvasAWT = new NewtCanvasAWT(glWindow);
 
-        glWindow.setSize(1024, 768);
+        glWindow.setSize(1280, 720);
 
         glWindow.addGLEventListener(this);
 

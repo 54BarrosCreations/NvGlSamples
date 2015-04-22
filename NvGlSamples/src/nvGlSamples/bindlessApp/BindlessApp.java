@@ -35,18 +35,10 @@ package nvGlSamples.bindlessApp;
 
 import nvGlSamples.bindlessApp.util.PerMeshUniforms;
 import nvGlSamples.bindlessApp.util.Mesh;
-import com.jogamp.newt.awt.NewtCanvasAWT;
-import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.GLAutoDrawable;
-import com.jogamp.opengl.GLCapabilities;
-import com.jogamp.opengl.GLEventListener;
-import com.jogamp.opengl.GLProfile;
-import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.util.GLBuffers;
 import com.jogamp.opengl.util.texture.TextureIO;
-import glsl.GLSLProgramObject;
-import glutil.ViewPole;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
@@ -58,8 +50,9 @@ import jglm.Vec2;
 import jglm.Vec3;
 import nvGlSamples.bindlessApp.util.TransformUniforms;
 import nvGlSamples.bindlessApp.util.Vertex;
+import nvGlSamples.util.NvGLSLProgram;
 import nvGlSamples.util.NvImage;
-import nvGlSamples.util.NvInputTransformer;
+import nvGlSamples.util.NvSampleApp;
 
 /**
  * This sample demonstrates using bindless rendering with
@@ -91,15 +84,7 @@ import nvGlSamples.util.NvInputTransformer;
  *
  * @author gbarbieri
  */
-public class BindlessApp implements GLEventListener {
-
-    private GLWindow glWindow;
-    private NewtCanvasAWT newtCanvasAWT;
-    private Animator animator;
-    private ViewPole viewPole;
-    private int[] ubo;
-    private MouseListener mouseListener;
-    private NvInputTransformer transformer;
+public class BindlessApp extends NvSampleApp {
 
     private final int SQRT_BUILDING_COUNT = 100;
 
@@ -107,7 +92,7 @@ public class BindlessApp implements GLEventListener {
     private Mesh[] meshes;
 
     // Shader stuff
-    private GLSLProgramObject shader;
+    private NvGLSLProgram shader;
     private int bindlessPerMeshUniformsPtrAttribLocation;
 
     // uniform buffer object (UBO) for tranform data
@@ -137,15 +122,16 @@ public class BindlessApp implements GLEventListener {
     private final String assetShaders = "/nvGlSamples/bindlessApp/assets/shaders/";
 
     // Timing related stuff
-    private long frameTime;
     private float minimumFrameDeltaTime;
     private float t;
 
     public BindlessApp() {
 
+        super();
+
         useBindlessUniforms = false;
         updateUniformsEveryFrame = true;
-        usePerMeshUniforms = true;
+        usePerMeshUniforms = false;
         useBindlessTextures = false;
 
         perMeshUniformsGPUPtr = new long[1];
@@ -155,24 +141,20 @@ public class BindlessApp implements GLEventListener {
     }
 
     @Override
-    public void init(GLAutoDrawable glad) {
-        System.out.println("init");
-
-        GL4 gl4 = glad.getGL().getGL4();
+    public void initRendering(GL4 gl4) {
 
         // Check extensions; exit on failure
         checkExtenstions(gl4);
 
         // Create our pixel and vertex shader
-        shader = new GLSLProgramObject(gl4, assetShaders, new String[]{"simple_vertex.glsl"},
+        shader = new NvGLSLProgram(gl4, assetShaders, new String[]{"simple_vertex.glsl"},
                 new String[]{"simple_fragment.glsl"});
-        bindlessPerMeshUniformsPtrAttribLocation = gl4.glGetAttribLocation(
-                shader.getProgramId(), "bindlessPerMeshUniformsPtr");
+        bindlessPerMeshUniformsPtrAttribLocation = shader.getAttribLocation(gl4, "bindlessPerMeshUniformsPtr");
 
         // Set the initial view
-        transformer = new NvInputTransformer();
         transformer.setRotationVec(new Vec3((float) Math.toRadians(30f),
                 (float) Math.toRadians(30f), 0));
+        transformer.setTranslationVec(new Vec3(0f, 0f, -4f));
         transformUniformsData = new TransformUniforms();
 
         // Create the meshes
@@ -219,22 +201,19 @@ public class BindlessApp implements GLEventListener {
         // create Uniform Buffer Object (UBO) for param data and initialize
         perMeshUniforms = new int[1];
         gl4.glCreateBuffers(1, perMeshUniforms, 0);
+        gl4.glNamedBufferData(perMeshUniforms[0], PerMeshUniforms.size(), null, GL4.GL_STATIC_DRAW);
 
         // Initialize the per mesh Uniforms
         updatePerMeshUniforms(gl4, 0f);
 
-        checkError(gl4);
-
-        frameTime = System.currentTimeMillis();
-        System.out.println("/init");
+        checkGlError(gl4);
     }
 
     private void checkExtenstions(GL4 gl4) {
 
-        System.out.println("gl4.glGetString(GL4.GL_VERSION) " + gl4.glGetString(GL4.GL_VERSION));
-
-        System.out.println("gl4.isExtensionAvailable(\"GL_ARB_direct_state_access\" " + gl4.isExtensionAvailable("GL_ARB_direct_state_access"));
-
+//        System.out.println("gl4.glGetString(GL4.GL_VERSION) " + gl4.glGetString(GL4.GL_VERSION));
+//
+//        System.out.println("gl4.isExtensionAvailable(\"GL_ARB_direct_state_access\" " + gl4.isExtensionAvailable("GL_ARB_direct_state_access"));
         boolean GL_NV_vertex_buffer_unified_memory = gl4.isExtensionAvailable("GL_NV_vertex_buffer_unified_memory");
         if (!GL_NV_vertex_buffer_unified_memory) {
             System.out.println("GL_NV_vertex_buffer_unified_memory not available");
@@ -405,7 +384,7 @@ public class BindlessApp implements GLEventListener {
         float r = (float) Math.random();
         float g = (float) Math.random();
         float b = (float) Math.random();
-
+//        System.out.println("r " + r + " g " + g + " b " + b);
         return new Vec3(r, g, b);
     }
 
@@ -441,6 +420,7 @@ public class BindlessApp implements GLEventListener {
      * @param t
      */
     private void updatePerMeshUniforms(GL4 gl4, float t) {
+//        System.out.println("updatePerMeshUniforms " + t);
         // If we're using per mesh uniforms, compute the values for the uniforms 
         // for all of the meshes and give the data to the GPU.
         if (usePerMeshUniforms) {
@@ -474,11 +454,11 @@ public class BindlessApp implements GLEventListener {
 
             // Give the uniform data to the GPU
             float[] fb = new float[perMeshUniformsData.length * 6];
-            for (int i = 0; i < perMeshUniformsData.length; i++) {
+            for (int i = 1; i < perMeshUniformsData.length; i++) {
                 System.arraycopy(perMeshUniformsData[i].toFloatbuffer(), 0, fb, i * 6, 6);
             }
             FloatBuffer floatBuffer = GLBuffers.newDirectFloatBuffer(fb);
-            gl4.glNamedBufferData(perMeshUniforms[0], 6 * GLBuffers.SIZEOF_FLOAT,
+            gl4.glNamedBufferData(perMeshUniforms[0], perMeshUniformsData.length * PerMeshUniforms.size(),
                     floatBuffer, GL4.GL_STREAM_DRAW);
         } else {
             // All meshes will use these uniforms
@@ -490,7 +470,7 @@ public class BindlessApp implements GLEventListener {
             // Give the uniform data to the GPU
             float[] fb = perMeshUniformsData[0].toFloatbuffer();
             FloatBuffer floatBuffer = GLBuffers.newDirectFloatBuffer(fb);
-            gl4.glNamedBufferSubData(perMeshUniforms[0], 0, 6, floatBuffer);
+            gl4.glNamedBufferSubData(perMeshUniforms[0], 0, PerMeshUniforms.size(), floatBuffer);
         }
 
         if (useBindlessUniforms) {
@@ -519,12 +499,10 @@ public class BindlessApp implements GLEventListener {
     /**
      * Performs the actual rendering
      *
-     * @param glad
+     * @param gl4
      */
     @Override
-    public void display(GLAutoDrawable glad) {
-//        System.out.println("display");
-        GL4 gl4 = glad.getGL().getGL4();
+    public void draw(GL4 gl4) {
 
         Mat4 modelviewMatrix;
 
@@ -536,14 +514,14 @@ public class BindlessApp implements GLEventListener {
         shader.bind(gl4);
 
         if (useBindlessTextures) {
-            int samplersLocation = gl4.glGetUniformLocation(shader.getProgramId(), "samplers");
+            int samplersLocation = shader.getUniformLocation(gl4, "samplers");
             gl4.glUniformHandleui64vARB(samplersLocation, TEXTURE_FRAME_COUNT, textureHandles, 0);
         }
 
-        int bindlessTexture = gl4.glGetUniformLocation(shader.getProgramId(), "useBindless");
+        int bindlessTexture = shader.getUniformLocation(gl4, "useBindless");
         gl4.glUniform1i(bindlessTexture, useBindlessTextures ? 1 : 0);
 
-        int currentTexture = gl4.glGetUniformLocation(shader.getProgramId(), "currentFrame");
+        int currentTexture = shader.getUniformLocation(gl4, "currentFrame");
         gl4.glUniform1i(currentTexture, currentFrame);
 
         // Set up the transformation matices up
@@ -560,11 +538,12 @@ public class BindlessApp implements GLEventListener {
             float deltaTime;
             float dt;
 
-            deltaTime = getFrameDeltaTime();
+            deltaTime = frameDelta;
             if (deltaTime < minimumFrameDeltaTime) {
                 minimumFrameDeltaTime = deltaTime;
             }
             dt = Math.min(.00005f / minimumFrameDeltaTime, .01f);
+
             t += dt * Mesh.drawCallsPerState;
 
             updatePerMeshUniforms(gl4, t);
@@ -581,8 +560,8 @@ public class BindlessApp implements GLEventListener {
                     (int) ((perMeshUniformsGPUPtr[0] >> 32) & 0xFFFFFFFF));
         } else {
             gl4.glBindBufferBase(GL4.GL_UNIFORM_BUFFER, 3, perMeshUniforms[0]);
-            FloatBuffer fb = GLBuffers.newDirectFloatBuffer(perMeshUniformsData[0].toFloatbuffer());
-            gl4.glNamedBufferSubData(perMeshUniforms[0], 0, 6, fb);
+            gl4.glNamedBufferSubData(perMeshUniforms[0], 0, PerMeshUniforms.size(),
+                    GLBuffers.newDirectFloatBuffer(perMeshUniformsData[0].toFloatbuffer()));
         }
 
         // If all of the meshes are sharing the same vertex format, we can just 
@@ -633,7 +612,7 @@ public class BindlessApp implements GLEventListener {
 
             // If we're not sharing vertex formats between meshes, we have to 
             // reset the vertex format to a default state after each mesh
-            if (Mesh.useHeavyVertexFormat) {
+            if (Mesh.setVertexFormatOnEveryDrawCall) {
 
                 Mesh.renderFinish(gl4);
             }
@@ -650,23 +629,8 @@ public class BindlessApp implements GLEventListener {
         shader.unbind(gl4);
 
         // Update the rendering stats in the UI
-        float drawCallsPerSecond;
-
-        checkError(gl4);
-        frameTime = System.currentTimeMillis();
-    }
-
-    private long getFrameDeltaTime() {
-        return System.currentTimeMillis() - frameTime;
-    }
-
-    private void checkError(GL4 gl4) {
-
-        int error = gl4.glGetError();
-
-        if (error != GL4.GL_NO_ERROR) {
-            System.out.println("error " + error);
-        }
+//        float drawCallsPerSecond;
+        checkGlError(gl4);
     }
 
     /**
@@ -686,20 +650,8 @@ public class BindlessApp implements GLEventListener {
 
         gl4.glViewport(0, 0, width, height);
 
-        projectionMatrix = Jglm.perspective(90f, (float) width / (float) height, .1f, 10f);
+        projectionMatrix = Jglm.perspective(45f, (float) width / (float) height, .1f, 10f);
 
-        checkError(gl4);
-    }
-
-    public NewtCanvasAWT getNewtCanvasAWT() {
-        return newtCanvasAWT;
-    }
-
-    public GLWindow getGlWindow() {
-        return glWindow;
-    }
-
-    public Animator getAnimator() {
-        return animator;
+        checkGlError(gl4);
     }
 }
