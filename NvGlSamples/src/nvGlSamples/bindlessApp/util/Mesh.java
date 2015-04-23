@@ -8,7 +8,6 @@ package nvGlSamples.bindlessApp.util;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import java.util.ArrayList;
-import nvGlSamples.bindlessApp.BindlessApp;
 
 /**
  *
@@ -228,17 +227,15 @@ public class Mesh {
              * Render using Vertex Array Objects (VAO).
              */
             // Set up attribute 0 for the position (3 floats)
-            gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBuffer[0]);
-            gl4.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, Vertex.size(), 0);
-
             gl4.glVertexArrayAttribBinding(vao[0], 0, 0);
-            gl4.glVertexArrayAttribFormat(vao[0], 0, 3, GL4.GL_FLOAT, false, Vertex.positionOffset);            
-            gl4.glVertexArrayVertexBuffer(vao[0], 0, vertexBuffer[0], 0, 0);
-            
+            gl4.glVertexArrayAttribFormat(vao[0], 0, 3, GL4.GL_FLOAT, false, Vertex.positionOffset);
+
             // Set up attribute 1 for the color (4 unsigned bytes)
-            gl4.glVertexAttribPointer(1, 4, GL4.GL_UNSIGNED_BYTE, true, Vertex.size(), Vertex.colorOffset);
-//            gl4.glVertexArrayVertexBuffer(vao[0], 1, vertexBuffer[0], Vertex.colorOffset, Vertex.size());
-//            gl4.glVertexArrayAttribFormat(vao[0], 1, 4, GL4.GL_UNSIGNED_BYTE, true, Vertex.size());
+            gl4.glVertexArrayAttribBinding(vao[0], 1, 0);
+            gl4.glVertexArrayAttribFormat(vao[0], 1, 4, GL4.GL_UNSIGNED_BYTE, true, Vertex.colorOffset);
+
+            gl4.glVertexArrayElementBuffer(vao[0], indexBuffer[0]);
+            gl4.glVertexArrayVertexBuffer(vao[0], 0, vertexBuffer[0], 0, Vertex.size());
             // Set up a bunch of other attributes if we're using the heavy vertex format option
             if (useHeavyVertexFormat) {
 
@@ -307,7 +304,6 @@ public class Mesh {
             // Reset state
             gl4.glDisableVertexArrayAttrib(vao[0], 0);
             gl4.glDisableVertexArrayAttrib(vao[0], 1);
-            gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
             // Disable a bunch of other attributes if we're using the heavy vertex format option
             if (useHeavyVertexFormat) {

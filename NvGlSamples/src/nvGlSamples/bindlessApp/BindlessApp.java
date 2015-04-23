@@ -129,9 +129,9 @@ public class BindlessApp extends NvSampleApp {
 
         super();
 
-        useBindlessUniforms = false;
+        useBindlessUniforms = true;
         updateUniformsEveryFrame = true;
-        usePerMeshUniforms = false;
+        usePerMeshUniforms = true;
         useBindlessTextures = false;
 
         perMeshUniformsGPUPtr = new long[1];
@@ -420,7 +420,7 @@ public class BindlessApp extends NvSampleApp {
                     float x, z, radius;
 
                     x = (float) i / (float) SQRT_BUILDING_COUNT - .5f;
-                    z = (float) i / (float) SQRT_BUILDING_COUNT - .5f;
+                    z = (float) j / (float) SQRT_BUILDING_COUNT - .5f;
                     radius = (float) Math.sqrt(x * x + z * z);
 
                     perMeshUniformsData[index].r = (float) Math.sin(10f * radius + t);
@@ -438,8 +438,8 @@ public class BindlessApp extends NvSampleApp {
                 System.arraycopy(perMeshUniformsData[i].toFloatbuffer(), 0, fb, i * 6, 6);
             }
             FloatBuffer floatBuffer = GLBuffers.newDirectFloatBuffer(fb);
-            gl4.glNamedBufferData(perMeshUniforms[0], perMeshUniformsData.length * PerMeshUniforms.size(),
-                    floatBuffer, GL4.GL_STREAM_DRAW);
+            gl4.glNamedBufferData(perMeshUniforms[0], perMeshUniformsData.length
+                    * PerMeshUniforms.size(), floatBuffer, GL4.GL_STREAM_DRAW);
         } else {
             // All meshes will use these uniforms
             perMeshUniformsData[0].r = (float) Math.sin(t);
@@ -572,7 +572,7 @@ public class BindlessApp extends NvSampleApp {
 
                     gl4.glBindBufferBase(GL4.GL_UNIFORM_BUFFER, 3, perMeshUniforms[0]);
                     gl4.glNamedBufferSubData(perMeshUniforms[0], 0, PerMeshUniforms.size(),
-                            GLBuffers.newDirectFloatBuffer(perMeshUniformsData[0].toFloatbuffer()));
+                            GLBuffers.newDirectFloatBuffer(perMeshUniformsData[i].toFloatbuffer()));
                 }
             }
 
