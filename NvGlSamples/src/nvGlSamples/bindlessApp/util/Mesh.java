@@ -8,6 +8,7 @@ package nvGlSamples.bindlessApp.util;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import java.util.ArrayList;
+import nvGlSamples.bindlessApp.BindlessApp;
 
 /**
  *
@@ -27,6 +28,7 @@ public class Mesh {
     private int[] indexBufferSize;
     private int vertexCount;            // Number of vertices in mesh
     private int indexCount;             // Number of indices in mesh
+    public static int[] vao;
 
     public Mesh() {
 
@@ -67,6 +69,7 @@ public class Mesh {
          * http://stackoverflow.com/questions/29743881/glnamedbufferdata-fires-gl-invalid-operation
          * https://www.opengl.org/discussion_boards/showthread.php/186134-glNamedBufferData-fires-GL_INVALID_OPERATION
          */
+
         gl4.glNamedBufferData(vertexBuffer[0], Vertex.size() * vertices.size(),
                 GLBuffers.newDirectFloatBuffer(verticesArray), GL4.GL_STATIC_DRAW);
         gl4.glNamedBufferData(indexBuffer[0], GLBuffers.SIZEOF_SHORT * indices.size(),
@@ -145,18 +148,18 @@ public class Mesh {
         } else {
 
             // For Vertex Array Objects (VAO), enable the vertex attributes
-            gl4.glEnableVertexArrayAttrib(0, 0);
-            gl4.glEnableVertexArrayAttrib(0, 1);
+            gl4.glEnableVertexArrayAttrib(vao[0], 0);
+            gl4.glEnableVertexArrayAttrib(vao[0], 1);
 
             // Enable a bunch of other attributes if we're using the heavy 
             // vertex format option
             if (useHeavyVertexFormat) {
 
-                gl4.glEnableVertexArrayAttrib(0, 3);
-                gl4.glEnableVertexArrayAttrib(0, 4);
-                gl4.glEnableVertexArrayAttrib(0, 5);
-                gl4.glEnableVertexArrayAttrib(0, 6);
-                gl4.glEnableVertexArrayAttrib(0, 7);
+                gl4.glEnableVertexArrayAttrib(vao[0], 3);
+                gl4.glEnableVertexArrayAttrib(vao[0], 4);
+                gl4.glEnableVertexArrayAttrib(vao[0], 5);
+                gl4.glEnableVertexArrayAttrib(vao[0], 6);
+                gl4.glEnableVertexArrayAttrib(vao[0], 7);
             }
         }
     }
@@ -172,7 +175,7 @@ public class Mesh {
             System.out.println("Error, vertexBuffer == 0");
         }
         if (indexBuffer[0] == 0) {
-            System.out.println("Error, indexBuffer == 0");
+//            System.out.println("Error, indexBuffer == 0");
         }
 
         if (enableVBUM) {
@@ -225,15 +228,17 @@ public class Mesh {
              * Render using Vertex Array Objects (VAO).
              */
             // Set up attribute 0 for the position (3 floats)
-            gl4.glVertexArrayVertexBuffer(0, 0, vertexBuffer[0], Vertex.positionOffset,
-                    Vertex.size());
-            gl4.glVertexArrayAttribFormat(0, 0, 3, GL4.GL_FLOAT, false, Vertex.size());
+            gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBuffer[0]);
+            gl4.glVertexAttribPointer(0, 3, GL4.GL_FLOAT, false, Vertex.size(), 0);
 
+            gl4.glVertexArrayAttribBinding(vao[0], 0, 0);
+            gl4.glVertexArrayAttribFormat(vao[0], 0, 3, GL4.GL_FLOAT, false, Vertex.positionOffset);            
+            gl4.glVertexArrayVertexBuffer(vao[0], 0, vertexBuffer[0], 0, 0);
+            
             // Set up attribute 1 for the color (4 unsigned bytes)
-            gl4.glVertexArrayVertexBuffer(0, 1, vertexBuffer[0], Vertex.colorOffset,
-                    Vertex.size());
-            gl4.glVertexArrayAttribFormat(0, 1, 4, GL4.GL_UNSIGNED_BYTE, true, Vertex.size());
-
+            gl4.glVertexAttribPointer(1, 4, GL4.GL_UNSIGNED_BYTE, true, Vertex.size(), Vertex.colorOffset);
+//            gl4.glVertexArrayVertexBuffer(vao[0], 1, vertexBuffer[0], Vertex.colorOffset, Vertex.size());
+//            gl4.glVertexArrayAttribFormat(vao[0], 1, 4, GL4.GL_UNSIGNED_BYTE, true, Vertex.size());
             // Set up a bunch of other attributes if we're using the heavy vertex format option
             if (useHeavyVertexFormat) {
 
@@ -300,8 +305,9 @@ public class Mesh {
 
             // Rendering with Vertex Array Objects (VAO)
             // Reset state
-            gl4.glDisableVertexArrayAttrib(0, 0);
-            gl4.glDisableVertexArrayAttrib(0, 1);
+            gl4.glDisableVertexArrayAttrib(vao[0], 0);
+            gl4.glDisableVertexArrayAttrib(vao[0], 1);
+            gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
             // Disable a bunch of other attributes if we're using the heavy vertex format option
             if (useHeavyVertexFormat) {

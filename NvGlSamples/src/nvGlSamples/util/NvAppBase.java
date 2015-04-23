@@ -42,6 +42,7 @@ public class NvAppBase implements GLEventListener {
         glWindow.addGLEventListener(this);
 
         animator = new Animator(glWindow);
+//        animator.setExclusiveContext(false);
         animator.start();
     }
 

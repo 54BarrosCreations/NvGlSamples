@@ -203,6 +203,10 @@ public class BindlessApp extends NvSampleApp {
         gl4.glCreateBuffers(1, perMeshUniforms, 0);
         gl4.glNamedBufferData(perMeshUniforms[0], PerMeshUniforms.size(), null, GL4.GL_STATIC_DRAW);
 
+        Mesh.vao = new int[1];
+        gl4.glGenVertexArrays(1, Mesh.vao, 0);
+        gl4.glBindVertexArray(Mesh.vao[0]);
+
         // Initialize the per mesh Uniforms
         updatePerMeshUniforms(gl4, 0f);
 
@@ -290,74 +294,50 @@ public class BindlessApp extends NvSampleApp {
         ArrayList<Short> indices = new ArrayList<>();
 
         dim.x *= .5f;
-        dim.y *= .5f;
+        dim.z *= .5f;
 
         // Generate a simple building model (i.e. a box). All of the "buildings" are in world space
         // +Z face
         Vec3 color = randomColor();
-        vertices.add(new Vertex(-dim.x + pos.x, 0f + pos.y, +dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(+dim.x + pos.x, 0f + pos.y, +dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(+dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(-dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(-dim.x + pos.x, 0f + pos.y, +dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(+dim.x + pos.x, 0f + pos.y, +dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(+dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(-dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z, color.x, color.y, color.z, 1f));
 
         // -Z face
         color = randomColor();
-        vertices.add(new Vertex(-dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(+dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(+dim.x + pos.x, 0f + pos.y, -dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(-dim.x + pos.x, 0f + pos.y, -dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(-dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(+dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(+dim.x + pos.x, 0f + pos.y, -dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(-dim.x + pos.x, 0f + pos.y, -dim.z + pos.z, color.x, color.y, color.z, 1f));
 
         // +X face
         color = randomColor();
-        vertices.add(new Vertex(+dim.x + pos.x, 0f + pos.y, +dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(+dim.x + pos.x, 0f + pos.y, -dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(+dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(+dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(+dim.x + pos.x, 0f + pos.y, +dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(+dim.x + pos.x, 0f + pos.y, -dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(+dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(+dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z, color.x, color.y, color.z, 1f));
 
         // -X face
         color = randomColor();
-        vertices.add(new Vertex(-dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(-dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(-dim.x + pos.x, 0f + pos.y, -dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(-dim.x + pos.x, 0f + pos.y, +dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(-dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(-dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(-dim.x + pos.x, 0f + pos.y, -dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(-dim.x + pos.x, 0f + pos.y, +dim.z + pos.z, color.x, color.y, color.z, 1f));
 
         // +Y face
         color = randomColor();
-        vertices.add(new Vertex(-dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(+dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(+dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(-dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(-dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(+dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(+dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(-dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z, color.x, color.y, color.z, 1f));
 
         // -Y face
         color = randomColor();
-        vertices.add(new Vertex(-dim.x + pos.x, 0f + pos.y, -dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(+dim.x + pos.x, 0f + pos.y, -dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(+dim.x + pos.x, 0f + pos.y, +dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
-        vertices.add(new Vertex(-dim.x + pos.x, 0f + pos.y, +dim.z + pos.z,
-                color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(-dim.x + pos.x, 0f + pos.y, -dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(+dim.x + pos.x, 0f + pos.y, -dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(+dim.x + pos.x, 0f + pos.y, +dim.z + pos.z, color.x, color.y, color.z, 1f));
+        vertices.add(new Vertex(-dim.x + pos.x, 0f + pos.y, +dim.z + pos.z, color.x, color.y, color.z, 1f));
 
         // Create the indices
         for (int i = 0; i < 24; i += 4) {
@@ -512,7 +492,7 @@ public class BindlessApp extends NvSampleApp {
 
         // Enable the vertex and pixel shader
         shader.bind(gl4);
-
+//
         if (useBindlessTextures) {
             int samplersLocation = shader.getUniformLocation(gl4, "samplers");
             gl4.glUniformHandleui64vARB(samplersLocation, TEXTURE_FRAME_COUNT, textureHandles, 0);
@@ -523,7 +503,6 @@ public class BindlessApp extends NvSampleApp {
 
         int currentTexture = shader.getUniformLocation(gl4, "currentFrame");
         gl4.glUniform1i(currentTexture, currentFrame);
-
         // Set up the transformation matices up
         modelviewMatrix = transformer.getModelViewMat();
         transformUniformsData.modelView = modelviewMatrix;
