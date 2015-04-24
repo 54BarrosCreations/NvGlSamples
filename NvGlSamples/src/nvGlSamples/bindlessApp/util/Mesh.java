@@ -86,7 +86,7 @@ public class Mesh {
         gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
 
         // *** INTERESTING ***
-        // get the GPU pointer for the vertex buffer and make the vertex buffer 
+        // get the GPU pointer for the index buffer and make the index buffer 
         // resident on the GPU
         gl4.glBindBuffer(GL4.GL_ELEMENT_ARRAY_BUFFER, indexBuffer[0]);
         gl4.glGetBufferParameterui64vNV(GL4.GL_ELEMENT_ARRAY_BUFFER,
@@ -234,7 +234,7 @@ public class Mesh {
             gl4.glVertexArrayAttribBinding(vao[0], 1, 0);
             gl4.glVertexArrayAttribFormat(vao[0], 1, 4, GL4.GL_UNSIGNED_BYTE, true, Vertex.colorOffset);
 
-            gl4.glVertexArrayElementBuffer(vao[0], indexBuffer[0]);
+            //gl4.glVertexArrayElementBuffer(vao[0], indexBuffer[0]);
             gl4.glVertexArrayVertexBuffer(vao[0], 0, vertexBuffer[0], 0, Vertex.size());
             // Set up a bunch of other attributes if we're using the heavy vertex format option
             if (useHeavyVertexFormat) {

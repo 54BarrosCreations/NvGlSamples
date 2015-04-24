@@ -71,11 +71,16 @@ public class NvSampleApp extends NvAppBase {
 
         glad.setAutoSwapBufferMode(false);
 //        System.out.println("gl4.getSwapInterval() " + gl4.getSwapInterval());
-        animator.setRunAsFastAsPossible(true);
-//        animator.setExclusiveContext(true);
-        animator.setUpdateFPSFrames(100, System.out);
 
         initRendering(gl4);
+
+        Thread t = glWindow.setExclusiveContextThread(null);
+//        glWindow.setExclusiveContextThread(t);
+
+        animator.setExclusiveContext(t);
+        animator.setRunAsFastAsPossible(true);
+        animator.setUpdateFPSFrames(100, System.out);
+        animator.start();
     }
 
     protected void initRendering(GL4 gl4) {

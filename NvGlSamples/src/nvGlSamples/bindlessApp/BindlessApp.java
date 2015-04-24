@@ -87,6 +87,7 @@ import nvGlSamples.util.NvSampleApp;
 public class BindlessApp extends NvSampleApp {
 
     private final int SQRT_BUILDING_COUNT = 100;
+    private final float ANIMATION_DURATION = 5f;
 
     // Simple collection of meshes to render
     private Mesh[] meshes;
@@ -214,10 +215,7 @@ public class BindlessApp extends NvSampleApp {
     }
 
     private void checkExtenstions(GL4 gl4) {
-
-//        System.out.println("gl4.glGetString(GL4.GL_VERSION) " + gl4.glGetString(GL4.GL_VERSION));
-//
-//        System.out.println("gl4.isExtensionAvailable(\"GL_ARB_direct_state_access\" " + gl4.isExtensionAvailable("GL_ARB_direct_state_access"));
+        
         boolean GL_NV_vertex_buffer_unified_memory = gl4.isExtensionAvailable("GL_NV_vertex_buffer_unified_memory");
         if (!GL_NV_vertex_buffer_unified_memory) {
             System.out.println("GL_NV_vertex_buffer_unified_memory not available");
@@ -609,6 +607,12 @@ public class BindlessApp extends NvSampleApp {
 
         // Update the rendering stats in the UI
 //        float drawCallsPerSecond;
+        currentTime += frameDelta;
+        if (currentTime > ANIMATION_DURATION) {
+            currentTime = 0f;
+        }
+        currentFrame = (int) (180f * currentTime / ANIMATION_DURATION);
+
         checkGlError(gl4);
     }
 

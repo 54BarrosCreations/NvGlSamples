@@ -19,7 +19,7 @@ import com.jogamp.opengl.util.Animator;
  */
 public class NvAppBase implements GLEventListener {
 
-    private GLWindow glWindow;
+    protected GLWindow glWindow;
     private NewtCanvasAWT newtCanvasAWT;
     protected Animator animator;
 
@@ -43,7 +43,6 @@ public class NvAppBase implements GLEventListener {
 
         animator = new Animator(glWindow);
 //        animator.setExclusiveContext(false);
-        animator.start();
     }
 
     @Override
