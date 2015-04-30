@@ -197,13 +197,14 @@ public class BindlessApp extends NvSampleApp {
         // create Uniform Buffer Object (UBO) for transform data and initialize 
         transformUniforms = new int[1];
         gl4.glCreateBuffers(1, transformUniforms, 0);
-        gl4.glNamedBufferData(transformUniforms[0], TransformUniforms.size(), null, GL4.GL_STATIC_DRAW);
+        gl4.glNamedBufferData(transformUniforms[0], TransformUniforms.size(), null, GL4.GL_STREAM_DRAW);
 
         // create Uniform Buffer Object (UBO) for param data and initialize
         perMeshUniforms = new int[1];
         gl4.glCreateBuffers(1, perMeshUniforms, 0);
-        gl4.glNamedBufferData(perMeshUniforms[0], PerMeshUniforms.size(), null, GL4.GL_STATIC_DRAW);
+        gl4.glNamedBufferData(perMeshUniforms[0], PerMeshUniforms.size(), null, GL4.GL_STREAM_DRAW);
 
+        // Init default vao, nv is using the not-allowed 0
         Mesh.vao = new int[1];
         gl4.glGenVertexArrays(1, Mesh.vao, 0);
         gl4.glBindVertexArray(Mesh.vao[0]);
@@ -215,7 +216,7 @@ public class BindlessApp extends NvSampleApp {
     }
 
     private void checkExtenstions(GL4 gl4) {
-        
+
         boolean GL_NV_vertex_buffer_unified_memory = gl4.isExtensionAvailable("GL_NV_vertex_buffer_unified_memory");
         if (!GL_NV_vertex_buffer_unified_memory) {
             System.out.println("GL_NV_vertex_buffer_unified_memory not available");
@@ -368,15 +369,14 @@ public class BindlessApp extends NvSampleApp {
 
     private void initBindlessTextures(GL4 gl4) {
 
-        String filename = assetTextures;
-
         textureHandles = new long[TEXTURE_FRAME_COUNT];
         textureIds = new int[TEXTURE_FRAME_COUNT];
 
         for (int i = 0; i < TEXTURE_FRAME_COUNT; i++) {
 
             try {
-                textureIds[i] = NvImage.uploadTextureFromDDSFile(gl4, filename + "NV" + i + "." + TextureIO.DDS);
+                textureIds[i] = NvImage.uploadTextureFromDDSFile(gl4, assetTextures
+                        + "NV" + i + "." + TextureIO.DDS);
             } catch (IOException ex) {
                 Logger.getLogger(BindlessApp.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -410,7 +410,6 @@ public class BindlessApp extends NvSampleApp {
 
             // Compute the per mesh uniforms for all of the "building" meshes
             int index = 1;
-
             for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
 
                 for (int j = 0; j < SQRT_BUILDING_COUNT; j++, index++) {
@@ -501,6 +500,7 @@ public class BindlessApp extends NvSampleApp {
 
         int currentTexture = shader.getUniformLocation(gl4, "currentFrame");
         gl4.glUniform1i(currentTexture, currentFrame);
+
         // Set up the transformation matices up
         modelviewMatrix = transformer.getModelViewMat();
         transformUniformsData.modelView = modelviewMatrix;
@@ -517,12 +517,13 @@ public class BindlessApp extends NvSampleApp {
 
             deltaTime = frameDelta;
             if (deltaTime < minimumFrameDeltaTime) {
+
                 minimumFrameDeltaTime = deltaTime;
             }
             dt = Math.min(.00005f / minimumFrameDeltaTime, .01f);
-
             t += dt * Mesh.drawCallsPerState;
 
+//            System.out.println("t "+t);
             updatePerMeshUniforms(gl4, t);
         }
 
@@ -577,6 +578,7 @@ public class BindlessApp extends NvSampleApp {
             // If we're not sharing vertex formats between meshes, we have to 
             // set the vertex format everytime it changes.
             if (Mesh.setVertexFormatOnEveryDrawCall) {
+
                 Mesh.renderPrep(gl4);
             }
 
