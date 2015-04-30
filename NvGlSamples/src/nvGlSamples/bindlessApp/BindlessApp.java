@@ -215,7 +215,7 @@ public class BindlessApp extends NvSampleApp {
     }
 
     private void checkExtenstions(GL4 gl4) {
-        
+
         boolean GL_NV_vertex_buffer_unified_memory = gl4.isExtensionAvailable("GL_NV_vertex_buffer_unified_memory");
         if (!GL_NV_vertex_buffer_unified_memory) {
             System.out.println("GL_NV_vertex_buffer_unified_memory not available");
@@ -472,6 +472,19 @@ public class BindlessApp extends NvSampleApp {
     @Override
     public void dispose(GLAutoDrawable glad) {
         System.out.println("dispose");
+
+        GL4 gl4 = glad.getGL().getGL4();
+
+        for (int text = 0; text < TEXTURE_FRAME_COUNT; text++) {
+            gl4.glDeleteTextures(TEXTURE_FRAME_COUNT, textureIds, 0);
+        }
+        for(Mesh mesh : meshes) {
+            mesh.dispose(gl4);
+        }
+        gl4.glDeleteBuffers(1, perMeshUniforms, 0);
+        gl4.glDeleteBuffers(1, transformUniforms, 0);
+        gl4.glDeleteProgram(shader.getProgramId());
+        gl4.glDeleteVertexArrays(1, Mesh.vao, 0);
     }
 
     /**

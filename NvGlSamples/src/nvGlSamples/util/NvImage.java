@@ -8,7 +8,6 @@ package nvGlSamples.util;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.texture.TextureData;
 import com.jogamp.opengl.util.texture.TextureIO;
-import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 import com.jogamp.opengl.util.texture.spi.DDSImage;
 import java.io.File;
 import java.io.IOException;
@@ -113,9 +112,5 @@ public class NvImage {
             gl4.glBindTexture(GL4.GL_TEXTURE_2D, 0);
         }
         return texID[0];
-    }
-
-    private static void uploadTexture(GL4 gl4) {
-
     }
 }
