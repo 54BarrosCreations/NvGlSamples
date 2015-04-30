@@ -312,4 +312,9 @@ public class Mesh {
         }
     }
 
+    public void dispose(GL4 gl4) {
+        
+        gl4.glDeleteBuffers(1, vertexBuffer, 0);
+        gl4.glDeleteBuffers(1, indexBuffer, 0);
+    }
 }
