@@ -5,6 +5,8 @@
  */
 package nvGlSamples.util;
 
+import nvGlSamples.bindlessApp.BindlessApp;
+
 /**
  *
  * @author elect
@@ -32,6 +34,9 @@ public class NvStopWatch {
      */
     public void stop() {
         diffTime = getDiffTime();
+//        if (diffTime < 0) {
+//            System.out.println("diffTime " + diffTime);
+//        }
         running = false;
     }
 
@@ -47,6 +52,9 @@ public class NvStopWatch {
 
     public float getTime() {
         float ms = running ? getDiffTime() : diffTime;
+//        if ((ms) < 0) {
+//            System.out.println("ms " + ms + " running " + running + " diffTime " + diffTime);
+//        }
         return ms / 1000;
     }
 
@@ -56,6 +64,12 @@ public class NvStopWatch {
      * @return
      */
     private long getDiffTime() {
-        return System.currentTimeMillis() - startTime;
+        long now = System.currentTimeMillis();
+        long diff = System.currentTimeMillis() - startTime;
+        if (diff < 0) {
+//            System.out.println("diff " + diff + " now " + now + " startTime " + startTime);
+            diff = (long) BindlessApp.minimumFrameDeltaTime;
+        }
+        return diff;
     }
 }

@@ -123,16 +123,16 @@ public class BindlessApp extends NvSampleApp {
     private final String assetShaders = "/nvGlSamples/bindlessApp/assets/shaders/";
 
     // Timing related stuff
-    private float minimumFrameDeltaTime;
+    public static float minimumFrameDeltaTime;
     private float t;
 
     public BindlessApp() {
 
         super();
 
-        useBindlessUniforms = true;
-        updateUniformsEveryFrame = true;
-        usePerMeshUniforms = true;
+        useBindlessUniforms = false;
+        updateUniformsEveryFrame = false;
+        usePerMeshUniforms = false;
         useBindlessTextures = false;
 
         perMeshUniformsGPUPtr = new long[1];
@@ -474,10 +474,12 @@ public class BindlessApp extends NvSampleApp {
 
         GL4 gl4 = glad.getGL().getGL4();
 
-        for (int text = 0; text < TEXTURE_FRAME_COUNT; text++) {
-            gl4.glDeleteTextures(TEXTURE_FRAME_COUNT, textureIds, 0);
+        if (textureIds != null) {
+            for (int text = 0; text < TEXTURE_FRAME_COUNT; text++) {
+                gl4.glDeleteTextures(TEXTURE_FRAME_COUNT, textureIds, 0);
+            }
         }
-        for(Mesh mesh : meshes) {
+        for (Mesh mesh : meshes) {
             mesh.dispose(gl4);
         }
         gl4.glDeleteBuffers(1, perMeshUniforms, 0);
@@ -529,6 +531,9 @@ public class BindlessApp extends NvSampleApp {
             float dt;
 
             deltaTime = frameDelta;
+//            if (frameDelta < 0) {
+//                System.out.println("frameDelta < 0 " + frameDelta);
+//            }
             if (deltaTime < minimumFrameDeltaTime) {
 
                 minimumFrameDeltaTime = deltaTime;

@@ -15,8 +15,8 @@ import com.jogamp.opengl.GLAutoDrawable;
 public class NvSampleApp extends NvAppBase {
 
     protected NvInputTransformer transformer;
-    protected NvStopWatch frameTimer;
-    protected NvStopWatch drawTimer;
+    private NvStopWatch frameTimer;
+    private NvStopWatch drawTimer;
     private long totalTime;
     private long frameTime;
     protected float frameDelta;
@@ -74,10 +74,10 @@ public class NvSampleApp extends NvAppBase {
 
         initRendering(gl4);
 
-        Thread t = glWindow.setExclusiveContextThread(null);
+//        Thread t = glWindow.setExclusiveContextThread(null);
 //        glWindow.setExclusiveContextThread(t);
 
-        animator.setExclusiveContext(t);
+//        animator.setExclusiveContext(t);
         animator.setRunAsFastAsPossible(true);
         animator.setUpdateFPSFrames(100, System.out);
         animator.start();
@@ -104,7 +104,7 @@ public class NvSampleApp extends NvAppBase {
         GL4 gl4 = glad.getGL().getGL4();
 
         frameTimer.start();
-        drawTimer.start();
+//        drawTimer.start();
 
         draw(gl4);
 
@@ -112,8 +112,8 @@ public class NvSampleApp extends NvAppBase {
 
         glad.swapBuffers();
 
-        drawTimer.stop();
-        drawTimer.reset();
+//        drawTimer.stop();
+//        drawTimer.reset();
     }
 
     public void draw(GL4 gl4) {
