@@ -123,16 +123,16 @@ public class BindlessApp extends NvSampleApp {
     private final String assetShaders = "/nvGlSamples/bindlessApp/assets/shaders/";
 
     // Timing related stuff
-    private float minimumFrameDeltaTime;
+    public static float minimumFrameDeltaTime;
     private float t;
 
     public BindlessApp() {
 
         super();
 
-        useBindlessUniforms = true;
-        updateUniformsEveryFrame = true;
-        usePerMeshUniforms = true;
+        useBindlessUniforms = false;
+        updateUniformsEveryFrame = false;
+        usePerMeshUniforms = false;
         useBindlessTextures = false;
 
         perMeshUniformsGPUPtr = new long[1];
@@ -197,13 +197,14 @@ public class BindlessApp extends NvSampleApp {
         // create Uniform Buffer Object (UBO) for transform data and initialize 
         transformUniforms = new int[1];
         gl4.glCreateBuffers(1, transformUniforms, 0);
-        gl4.glNamedBufferData(transformUniforms[0], TransformUniforms.size(), null, GL4.GL_STATIC_DRAW);
+        gl4.glNamedBufferData(transformUniforms[0], TransformUniforms.size(), null, GL4.GL_STREAM_DRAW);
 
         // create Uniform Buffer Object (UBO) for param data and initialize
         perMeshUniforms = new int[1];
         gl4.glCreateBuffers(1, perMeshUniforms, 0);
-        gl4.glNamedBufferData(perMeshUniforms[0], PerMeshUniforms.size(), null, GL4.GL_STATIC_DRAW);
+        gl4.glNamedBufferData(perMeshUniforms[0], PerMeshUniforms.size(), null, GL4.GL_STREAM_DRAW);
 
+        // Init default vao, nv is using the not-allowed 0
         Mesh.vao = new int[1];
         gl4.glGenVertexArrays(1, Mesh.vao, 0);
         gl4.glBindVertexArray(Mesh.vao[0]);
@@ -368,15 +369,14 @@ public class BindlessApp extends NvSampleApp {
 
     private void initBindlessTextures(GL4 gl4) {
 
-        String filename = assetTextures;
-
         textureHandles = new long[TEXTURE_FRAME_COUNT];
         textureIds = new int[TEXTURE_FRAME_COUNT];
 
         for (int i = 0; i < TEXTURE_FRAME_COUNT; i++) {
 
             try {
-                textureIds[i] = NvImage.uploadTextureFromDDSFile(gl4, filename + "NV" + i + "." + TextureIO.DDS);
+                textureIds[i] = NvImage.uploadTextureFromDDSFile(gl4, assetTextures
+                        + "NV" + i + "." + TextureIO.DDS);
             } catch (IOException ex) {
                 Logger.getLogger(BindlessApp.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -410,7 +410,6 @@ public class BindlessApp extends NvSampleApp {
 
             // Compute the per mesh uniforms for all of the "building" meshes
             int index = 1;
-
             for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
 
                 for (int j = 0; j < SQRT_BUILDING_COUNT; j++, index++) {
@@ -475,10 +474,12 @@ public class BindlessApp extends NvSampleApp {
 
         GL4 gl4 = glad.getGL().getGL4();
 
-        for (int text = 0; text < TEXTURE_FRAME_COUNT; text++) {
-            gl4.glDeleteTextures(TEXTURE_FRAME_COUNT, textureIds, 0);
+        if (textureIds != null) {
+            for (int text = 0; text < TEXTURE_FRAME_COUNT; text++) {
+                gl4.glDeleteTextures(TEXTURE_FRAME_COUNT, textureIds, 0);
+            }
         }
-        for(Mesh mesh : meshes) {
+        for (Mesh mesh : meshes) {
             mesh.dispose(gl4);
         }
         gl4.glDeleteBuffers(1, perMeshUniforms, 0);
@@ -514,6 +515,7 @@ public class BindlessApp extends NvSampleApp {
 
         int currentTexture = shader.getUniformLocation(gl4, "currentFrame");
         gl4.glUniform1i(currentTexture, currentFrame);
+
         // Set up the transformation matices up
         modelviewMatrix = transformer.getModelViewMat();
         transformUniformsData.modelView = modelviewMatrix;
@@ -529,13 +531,17 @@ public class BindlessApp extends NvSampleApp {
             float dt;
 
             deltaTime = frameDelta;
+//            if (frameDelta < 0) {
+//                System.out.println("frameDelta < 0 " + frameDelta);
+//            }
             if (deltaTime < minimumFrameDeltaTime) {
+
                 minimumFrameDeltaTime = deltaTime;
             }
             dt = Math.min(.00005f / minimumFrameDeltaTime, .01f);
-
             t += dt * Mesh.drawCallsPerState;
 
+//            System.out.println("t "+t);
             updatePerMeshUniforms(gl4, t);
         }
 
@@ -590,6 +596,7 @@ public class BindlessApp extends NvSampleApp {
             // If we're not sharing vertex formats between meshes, we have to 
             // set the vertex format everytime it changes.
             if (Mesh.setVertexFormatOnEveryDrawCall) {
+
                 Mesh.renderPrep(gl4);
             }
 
