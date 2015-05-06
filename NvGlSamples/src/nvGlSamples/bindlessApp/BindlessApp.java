@@ -363,7 +363,7 @@ public class BindlessApp extends NvSampleApp {
         float r = (float) Math.random();
         float g = (float) Math.random();
         float b = (float) Math.random();
-//        System.out.println("r " + r + " g " + g + " b " + b);
+        
         return new Vec3(r, g, b);
     }
 
@@ -504,7 +504,7 @@ public class BindlessApp extends NvSampleApp {
 
         // Enable the vertex and pixel shader
         shader.bind(gl4);
-//
+
         if (useBindlessTextures) {
             int samplersLocation = shader.getUniformLocation(gl4, "samplers");
             gl4.glUniformHandleui64vARB(samplersLocation, TEXTURE_FRAME_COUNT, textureHandles, 0);
@@ -531,9 +531,7 @@ public class BindlessApp extends NvSampleApp {
             float dt;
 
             deltaTime = frameDelta;
-//            if (frameDelta < 0) {
-//                System.out.println("frameDelta < 0 " + frameDelta);
-//            }
+            
             if (deltaTime < minimumFrameDeltaTime) {
 
                 minimumFrameDeltaTime = deltaTime;
@@ -541,7 +539,6 @@ public class BindlessApp extends NvSampleApp {
             dt = Math.min(.00005f / minimumFrameDeltaTime, .01f);
             t += dt * Mesh.drawCallsPerState;
 
-//            System.out.println("t "+t);
             updatePerMeshUniforms(gl4, t);
         }
 

@@ -76,7 +76,6 @@ public class NvSampleApp extends NvAppBase {
 
 //        Thread t = glWindow.setExclusiveContextThread(null);
 //        glWindow.setExclusiveContextThread(t);
-
 //        animator.setExclusiveContext(t);
         animator.setRunAsFastAsPossible(true);
         animator.setUpdateFPSFrames(100, System.out);
