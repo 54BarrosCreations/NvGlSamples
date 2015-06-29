@@ -80,6 +80,7 @@ import nvGlSamples.util.NvSampleApp;
  *
  * Mesh::renderFinish() in Mesh.cpp resets related state
  */
+
 /**
  *
  * @author gbarbieri
@@ -130,9 +131,9 @@ public class BindlessApp extends NvSampleApp {
 
         super();
 
-        useBindlessUniforms = false;
-        updateUniformsEveryFrame = false;
-        usePerMeshUniforms = false;
+        useBindlessUniforms = true;
+        updateUniformsEveryFrame = true;
+        usePerMeshUniforms = true;
         useBindlessTextures = false;
 
         perMeshUniformsGPUPtr = new long[1];
