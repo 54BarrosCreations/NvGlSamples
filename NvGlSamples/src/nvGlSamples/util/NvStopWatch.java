@@ -65,9 +65,9 @@ public class NvStopWatch {
      */
     private long getDiffTime() {
         long now = System.currentTimeMillis();
-        long diff = System.currentTimeMillis() - startTime;
+        long diff = now - startTime;
         if (diff < 0) {
-//            System.out.println("diff " + diff + " now " + now + " startTime " + startTime);
+            System.out.println("diff " + diff + " now " + now + " startTime " + startTime);
             diff = (long) BindlessApp.minimumFrameDeltaTime;
         }
         return diff;

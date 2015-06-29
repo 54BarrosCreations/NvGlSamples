@@ -11,22 +11,31 @@ import com.jogamp.opengl.util.texture.TextureIO;
 import com.jogamp.opengl.util.texture.spi.DDSImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
-
+import java.nio.ByteBuffer;
 /**
  *
  * @author elect
  */
 public class NvImage {
 
-    public static int uploadTextureFromDDSFile(GL4 gl4, String filePath) throws IOException {
+    public static int uploadTextureFromDDSFile(GL4 gl4, String classPath) throws IOException {
 
-        URL url = NvImage.class.getResource(filePath);
+        URL url = NvImage.class.getResource(classPath);
         File file = new File(url.getPath());
-
+        
         DDSImage ddsImage = DDSImage.read(file);
 
         TextureData textureData = TextureIO.newTextureData(gl4.getGLProfile(), file, false, TextureIO.DDS);
+        
+//        InputStream inputStream = NvImage.class.getResourceAsStream(classPath);
+//        
+//        byte[] bytes = org.apache.commons.io.IOUtils.toByteArray(inputStream);
+//
+//        DDSImage ddsImage = DDSImage.read(ByteBuffer.wrap(bytes));
+//
+//        TextureData textureData = TextureIO.newTextureData(gl4.getGLProfile(), inputStream, false, TextureIO.DDS);
 
         int texID = uploadTextureFromDDSData(gl4, ddsImage, textureData);
 
