@@ -25,7 +25,12 @@ public class NvStopWatch {
      * Start time measurement.
      */
     public void start() {
-        startTime = System.currentTimeMillis();
+        /**
+         * IMPORTANT. Avoid System.currentTimeMillis() as on Ubuntu can shift
+         * and getting drifted returning a negative difference.
+         */
+//        startTime = System.currentTimeMillis();
+        startTime = System.nanoTime() / 1000000;
         running = true;
     }
 
@@ -64,10 +69,11 @@ public class NvStopWatch {
      * @return
      */
     private long getDiffTime() {
-        long now = System.currentTimeMillis();
-        long diff = System.currentTimeMillis() - startTime;
+//        long now = System.currentTimeMillis();
+        long now = System.nanoTime() / 1000000;
+        long diff = now - startTime;
         if (diff < 0) {
-//            System.out.println("diff " + diff + " now " + now + " startTime " + startTime);
+            System.out.println("diff " + diff + " now " + now + " startTime " + startTime);
             diff = (long) BindlessApp.minimumFrameDeltaTime;
         }
         return diff;
