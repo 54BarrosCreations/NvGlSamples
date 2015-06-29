@@ -36,7 +36,7 @@ public class NvSampleApp extends NvAppBase {
 
     @Override
     public void init(GLAutoDrawable glad) {
-
+        System.out.println("init");
         GL4 gl4 = glad.getGL().getGL4();
 
         System.out.println("GL_RENDERER = " + gl4.glGetString(GL4.GL_RENDERER));
