@@ -39,43 +39,42 @@ public class NvImage {
 
         gl4.glGenTextures(1, texID, 0);
 
-        if (ddsImage.isCubemap()) {
+//        if (ddsImage.isCubemap()) {
+//            gl4.glBindTexture(GL4.GL_TEXTURE_CUBE_MAP, texID[0]);
+//
+//            for (int f = GL4.GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+//                    f <= GL4.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z; f++) {
+//
+//                for (int l = 0; l < ddsImage.getNumMipMaps(); l++) {
+//
+//                    DDSImage.ImageInfo mipmap = ddsImage.getMipMap(l);
+//
+//                    int w = mipmap.getWidth();
+//                    int h = mipmap.getHeight();
+//
+//                    if (ddsImage.isCompressed()) {
+//
+//                        gl4.glCompressedTexImage2D(f, l, ddsImage.getCompressionFormat(),
+//                                w, h, 0, mipmap.getData().capacity(), mipmap.getData());
+//                    } else {
+//
+//                        gl4.glTexImage2D(f, l, textureData.getInternalFormat(), w, h, 0,
+//                                textureData.getPixelFormat(), textureData.getPixelType(),
+//                                mipmap.getData());
+//                    }
+//                }
+//            }
+//        } else {
+        gl4.glBindTexture(GL4.GL_TEXTURE_2D, texID[0]);
 
-            gl4.glBindTexture(GL4.GL_TEXTURE_CUBE_MAP, texID[0]);
+        if (ddsImage.getNumMipMaps() == 0) {
 
-            for (int f = GL4.GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-                    f <= GL4.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z; f++) {
+            if (ddsImage.isCompressed()) {
 
-                for (int l = 0; l < ddsImage.getNumMipMaps(); l++) {
-
-                    DDSImage.ImageInfo mipmap = ddsImage.getMipMap(l);
-
-                    int w = mipmap.getWidth();
-                    int h = mipmap.getHeight();
-
-                    if (ddsImage.isCompressed()) {
-
-                        gl4.glCompressedTexImage2D(f, l, ddsImage.getCompressionFormat(),
-                                w, h, 0, mipmap.getData().capacity(), mipmap.getData());
-                    } else {
-
-                        gl4.glTexImage2D(f, l, textureData.getInternalFormat(), w, h, 0,
-                                textureData.getPixelFormat(), textureData.getPixelType(),
-                                mipmap.getData());
-                    }
-                }
-            }
-        } else {
-            gl4.glBindTexture(GL4.GL_TEXTURE_2D, texID[0]);
-
-            if (ddsImage.getNumMipMaps() == 0) {
-
-                if (ddsImage.isCompressed()) {
-
-                    gl4.glCompressedTexImage2D(GL4.GL_TEXTURE_2D, 0, ddsImage.getCompressionFormat(),
-                            ddsImage.getWidth(), ddsImage.getHeight(), 0,
-                            textureData.getBuffer().capacity(), textureData.getBuffer());
-                } else {
+                gl4.glCompressedTexImage2D(GL4.GL_TEXTURE_2D, 0, ddsImage.getCompressionFormat(),
+                        ddsImage.getWidth(), ddsImage.getHeight(), 0,
+                        textureData.getBuffer().capacity(), textureData.getBuffer());
+            } else {
 //                    System.out.println("textureData.getInternalFormat() " + textureData.getInternalFormat());
 //                    System.out.println("textureData.getPixelFormat() " + textureData.getPixelFormat());
 //                    System.out.println("textureData.getPixelType() " + textureData.getPixelType());
@@ -83,34 +82,36 @@ public class NvImage {
 //                    System.out.println("ddsImage.getPixelFormat() " + ddsImage.getPixelFormat());
 //                    gl4.glTexImage2D(GL4.GL_TEXTURE_2D, 0, GL4.GL_RGB8, ddsImage.getWidth(), ddsImage.getHeight(), 0,
 //                            textureData.getPixelFormat(), textureData.getPixelType(), textureData.getBuffer());
-                    gl4.glTexImage2D(GL4.GL_TEXTURE_2D, 0, GL4.GL_RGB8, ddsImage.getWidth(), ddsImage.getHeight(), 0,
-                            GL4.GL_BGR, textureData.getPixelType(), textureData.getBuffer());
-                }
+                gl4.glTexImage2D(GL4.GL_TEXTURE_2D, 0, GL4.GL_RGB8, ddsImage.getWidth(), ddsImage.getHeight(), 0,
+                        GL4.GL_BGR, textureData.getPixelType(), textureData.getBuffer());
+            }
 
-            } else {
+        } else {
 
-                for (int l = 0; l < ddsImage.getNumMipMaps(); l++) {
+            for (int l = 0; l < ddsImage.getNumMipMaps(); l++) {
 
-                    DDSImage.ImageInfo mipmap = ddsImage.getMipMap(l);
+                DDSImage.ImageInfo mipmap = ddsImage.getMipMap(l);
 
-                    int w = mipmap.getWidth();
-                    int h = mipmap.getHeight();
+                int w = mipmap.getWidth();
+                int h = mipmap.getHeight();
 
-                    if (ddsImage.isCompressed()) {
+                if (ddsImage.isCompressed()) {
 
-                        gl4.glCompressedTexImage2D(GL4.GL_TEXTURE_2D, l,
-                                ddsImage.getCompressionFormat(), w, h, 0,
-                                mipmap.getData().capacity(), mipmap.getData());
-                    } else {
-
-                        gl4.glTexImage2D(GL4.GL_TEXTURE_2D, l, textureData.getInternalFormat(),
-                                w, h, 0, textureData.getPixelFormat(), textureData.getPixelType(),
-                                mipmap.getData());
-                    }
+                    gl4.glCompressedTexImage2D(GL4.GL_TEXTURE_2D, l,
+                            ddsImage.getCompressionFormat(), w, h, 0,
+                            mipmap.getData().capacity(), mipmap.getData());
+                } else {
+                    System.out.println("internalFormat " + textureData.getInternalFormat()
+                            + " textureData.getPixelFormat() " + textureData.getPixelFormat()
+                            + " textureData.getPixelType() " + textureData.getPixelType() + " l " + l);
+                    gl4.glTexImage2D(GL4.GL_TEXTURE_2D, l, textureData.getInternalFormat(),
+                            w, h, 0, textureData.getPixelFormat(), textureData.getPixelType(),
+                            mipmap.getData());
                 }
             }
-            gl4.glBindTexture(GL4.GL_TEXTURE_2D, 0);
         }
+        gl4.glBindTexture(GL4.GL_TEXTURE_2D, 0);
+//        }
         return texID[0];
     }
 }

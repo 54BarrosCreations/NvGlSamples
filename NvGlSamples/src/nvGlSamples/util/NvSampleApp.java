@@ -73,13 +73,6 @@ public class NvSampleApp extends NvAppBase {
 //        System.out.println("gl4.getSwapInterval() " + gl4.getSwapInterval());
 
         initRendering(gl4);
-
-//        Thread t = glWindow.setExclusiveContextThread(null);
-//        glWindow.setExclusiveContextThread(t);
-//        animator.setExclusiveContext(t);
-        animator.setRunAsFastAsPossible(true);
-        animator.setUpdateFPSFrames(100, System.out);
-        animator.start();
     }
 
     protected void initRendering(GL4 gl4) {

@@ -17,7 +17,8 @@ public class Mesh {
 
     public static int drawCallsPerState = 1;
     public static boolean setVertexFormatOnEveryDrawCall = false;
-    public static boolean enableVBUM = true;
+    public static boolean enableVBUM = false;
+    private static Mode mode = Mode.vbo;
     public static boolean useHeavyVertexFormat = false;
     protected int[] vertexBuffer;         // vertex buffer object for vertices
     protected int[] indexBuffer;          // vertex buffer object for indices
@@ -68,7 +69,6 @@ public class Mesh {
          * http://stackoverflow.com/questions/29743881/glnamedbufferdata-fires-gl-invalid-operation
          * https://www.opengl.org/discussion_boards/showthread.php/186134-glNamedBufferData-fires-GL_INVALID_OPERATION
          */
-
         gl4.glNamedBufferData(vertexBuffer[0], Vertex.size() * vertices.size(),
                 GLBuffers.newDirectFloatBuffer(verticesArray), GL4.GL_STATIC_DRAW);
         gl4.glNamedBufferData(indexBuffer[0], GLBuffers.SIZEOF_SHORT * indices.size(),
@@ -77,25 +77,24 @@ public class Mesh {
         // *** INTERESTING ***
         // get the GPU pointer for the vertex buffer and make the vertex buffer 
         // resident on the GPU
-        gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBuffer[0]);
-        gl4.glGetBufferParameterui64vNV(GL4.GL_ARRAY_BUFFER, GL4.GL_BUFFER_GPU_ADDRESS_NV,
-                vertexBufferGPUPtr, 0);
-        gl4.glGetBufferParameteriv(GL4.GL_ARRAY_BUFFER, GL4.GL_BUFFER_SIZE,
-                vertexBufferSize, 0);
-        gl4.glMakeBufferResidentNV(GL4.GL_ARRAY_BUFFER, GL4.GL_READ_ONLY);
-        gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
-
-        // *** INTERESTING ***
-        // get the GPU pointer for the index buffer and make the index buffer 
-        // resident on the GPU
-        gl4.glBindBuffer(GL4.GL_ELEMENT_ARRAY_BUFFER, indexBuffer[0]);
-        gl4.glGetBufferParameterui64vNV(GL4.GL_ELEMENT_ARRAY_BUFFER,
-                GL4.GL_BUFFER_GPU_ADDRESS_NV, indexBufferGPUPtr, 0);
-        gl4.glGetBufferParameteriv(GL4.GL_ELEMENT_ARRAY_BUFFER, GL4.GL_BUFFER_SIZE,
-                indexBufferSize, 0);
-        gl4.glMakeBufferResidentNV(GL4.GL_ELEMENT_ARRAY_BUFFER, GL4.GL_READ_ONLY);
-        gl4.glBindBuffer(GL4.GL_ELEMENT_ARRAY_BUFFER, 0);
-
+//        gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, vertexBuffer[0]);
+//        gl4.glGetBufferParameterui64vNV(GL4.GL_ARRAY_BUFFER, GL4.GL_BUFFER_GPU_ADDRESS_NV,
+//                vertexBufferGPUPtr, 0);
+//        gl4.glGetBufferParameteriv(GL4.GL_ARRAY_BUFFER, GL4.GL_BUFFER_SIZE,
+//                vertexBufferSize, 0);
+//        gl4.glMakeBufferResidentNV(GL4.GL_ARRAY_BUFFER, GL4.GL_READ_ONLY);
+//        gl4.glBindBuffer(GL4.GL_ARRAY_BUFFER, 0);
+//
+//        // *** INTERESTING ***
+//        // get the GPU pointer for the index buffer and make the index buffer 
+//        // resident on the GPU
+//        gl4.glBindBuffer(GL4.GL_ELEMENT_ARRAY_BUFFER, indexBuffer[0]);
+//        gl4.glGetBufferParameterui64vNV(GL4.GL_ELEMENT_ARRAY_BUFFER,
+//                GL4.GL_BUFFER_GPU_ADDRESS_NV, indexBufferGPUPtr, 0);
+//        gl4.glGetBufferParameteriv(GL4.GL_ELEMENT_ARRAY_BUFFER, GL4.GL_BUFFER_SIZE,
+//                indexBufferSize, 0);
+//        gl4.glMakeBufferResidentNV(GL4.GL_ELEMENT_ARRAY_BUFFER, GL4.GL_READ_ONLY);
+//        gl4.glBindBuffer(GL4.GL_ELEMENT_ARRAY_BUFFER, 0);
         vertexCount = vertices.size();
         indexCount = indices.size();
     }
@@ -107,6 +106,12 @@ public class Mesh {
      */
     public static void renderPrep(GL4 gl4) {
 
+        switch(mode) {
+            
+            case vbo:
+                
+                
+        }
         if (enableVBUM) {
             /**
              * Specify the vertex format.
@@ -313,8 +318,15 @@ public class Mesh {
     }
 
     public void dispose(GL4 gl4) {
-        
+
         gl4.glDeleteBuffers(1, vertexBuffer, 0);
         gl4.glDeleteBuffers(1, indexBuffer, 0);
+    }
+
+    private enum Mode {
+
+        vbo,
+        vab,
+        vbum
     }
 }

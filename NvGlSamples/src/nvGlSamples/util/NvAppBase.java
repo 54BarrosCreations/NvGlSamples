@@ -5,7 +5,6 @@
  */
 package nvGlSamples.util;
 
-import com.jogamp.newt.awt.NewtCanvasAWT;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLCapabilities;
@@ -20,7 +19,6 @@ import com.jogamp.opengl.util.Animator;
 public class NvAppBase implements GLEventListener {
 
     protected GLWindow glWindow;
-    private NewtCanvasAWT newtCanvasAWT;
     protected Animator animator;
 
     public NvAppBase() {
@@ -29,30 +27,41 @@ public class NvAppBase implements GLEventListener {
 
     protected final void initGL() {
 
-        GLProfile gLProfile = GLProfile.getDefault();
+        GLProfile glProfile = GLProfile.getDefault();
 
-        GLCapabilities gLCapabilities = new GLCapabilities(gLProfile);
+        GLCapabilities glCapabilities = new GLCapabilities(glProfile);
 
-        glWindow = GLWindow.create(gLCapabilities);
-
-        newtCanvasAWT = new NewtCanvasAWT(glWindow);
-
+        glWindow = GLWindow.create(glCapabilities);
+        glWindow.setTitle("NvAppBase");
         glWindow.setSize(1280, 720);
-
+        glWindow.setUndecorated(false);
+        glWindow.setPointerVisible(true);
+        glWindow.setVisible(true);
+        
         glWindow.addGLEventListener(this);
-
-        animator = new Animator(glWindow);
-//        animator.setExclusiveContext(false);
+        
+        animator = new Animator();
+        animator.add(glWindow);
+        
+//        Thread t = glWindow.setExclusiveContextThread(null);
+//        glWindow.setExclusiveContextThread(t);
+//        animator.setExclusiveContext(t);
+//        animator.setModeBits(false, AnimatorBase.DEFAULT_FRAMES_PER_INTERVAL);
+//        animator.setExclusiveContext(true);
+        animator.setRunAsFastAsPossible(true);
+        animator.setUpdateFPSFrames(500, System.out);
+        animator.start();
     }
 
     @Override
     public void init(GLAutoDrawable glad) {
-
+        
     }
 
     @Override
     public void dispose(GLAutoDrawable glad) {
-
+//        animator.stop();
+//        glWindow.destroy();
     }
 
     @Override
@@ -64,17 +73,4 @@ public class NvAppBase implements GLEventListener {
     public void reshape(GLAutoDrawable glad, int i, int i1, int i2, int i3) {
 
     }
-
-    public GLWindow getGlWindow() {
-        return glWindow;
-    }
-
-    public NewtCanvasAWT getNewtCanvasAWT() {
-        return newtCanvasAWT;
-    }
-
-    public Animator getAnimator() {
-        return animator;
-    }
-
 }
