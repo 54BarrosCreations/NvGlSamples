@@ -11,6 +11,10 @@ import com.jogamp.newt.NewtFactory;
 import com.jogamp.newt.Screen;
 import com.jogamp.newt.opengl.GLWindow;
 import static com.jogamp.opengl.GL.GL_EXTENSIONS;
+import static com.jogamp.opengl.GL.GL_TRUE;
+import static com.jogamp.opengl.GL2ES2.GL_FRAGMENT_SHADER;
+import static com.jogamp.opengl.GL2ES2.GL_PROGRAM_SEPARABLE;
+import static com.jogamp.opengl.GL2ES2.GL_VERTEX_SHADER;
 import static com.jogamp.opengl.GL2ES3.GL_NUM_EXTENSIONS;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.GLAutoDrawable;
@@ -18,6 +22,8 @@ import com.jogamp.opengl.GLCapabilities;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.util.Animator;
+import com.jogamp.opengl.util.glsl.ShaderCode;
+import com.jogamp.opengl.util.glsl.ShaderProgram;
 
 /**
  *
@@ -62,6 +68,8 @@ public class BindlessApp implements GLEventListener {
         animator.start();
     }
 
+    private NvGLSLProgram shader;
+    
     public BindlessApp() {
 
     }
@@ -72,6 +80,22 @@ public class BindlessApp implements GLEventListener {
 
         GL4 gl4 = drawable.getGL().getGL4();
 
+        // Check extensions; exit on failure
+        if (!requireExtension(gl4, "GL_NV_vertex_buffer_unified_memory")) {
+            return;
+        }
+        if (!requireExtension(gl4, "GL_NV_shader_buffer_load")) {
+            return;
+        }
+        if (!requireExtension(gl4, "GL_EXT_direct_state_access")) {
+            return;
+        }
+        if (!requireExtension(gl4, "GL_NV_bindless_texture")) {
+            return;
+        }
+        NvGLSLProgram.createFromFiles(gl4, "src/gl4_kepler/bindlessApp/shaders", "bindless");
+        
+        
     }
 
     @Override
@@ -92,6 +116,8 @@ public class BindlessApp implements GLEventListener {
 
         System.exit(0);
     }
+
+    
 
     private boolean requireExtension(GL4 gl4, String ext) {
         return requireExtension(gl4, ext, true);
