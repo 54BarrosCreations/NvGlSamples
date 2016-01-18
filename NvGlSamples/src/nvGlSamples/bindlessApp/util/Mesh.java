@@ -69,10 +69,10 @@ public class Mesh {
          * http://stackoverflow.com/questions/29743881/glnamedbufferdata-fires-gl-invalid-operation
          * https://www.opengl.org/discussion_boards/showthread.php/186134-glNamedBufferData-fires-GL_INVALID_OPERATION
          */
-        gl4.glNamedBufferData(vertexBuffer[0], Vertex.size() * vertices.size(),
-                GLBuffers.newDirectFloatBuffer(verticesArray), GL4.GL_STATIC_DRAW);
-        gl4.glNamedBufferData(indexBuffer[0], GLBuffers.SIZEOF_SHORT * indices.size(),
-                GLBuffers.newDirectShortBuffer(indicesArray), GL4.GL_STATIC_DRAW);
+//        gl4.glNamedBufferData(vertexBuffer[0], Vertex.size() * vertices.size(),
+//                GLBuffers.newDirectFloatBuffer(verticesArray), GL4.GL_STATIC_DRAW);
+//        gl4.glNamedBufferData(indexBuffer[0], GLBuffers.SIZEOF_SHORT * indices.size(),
+//                GLBuffers.newDirectShortBuffer(indicesArray), GL4.GL_STATIC_DRAW);
 
         // *** INTERESTING ***
         // get the GPU pointer for the vertex buffer and make the vertex buffer 

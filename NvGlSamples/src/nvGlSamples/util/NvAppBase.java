@@ -47,7 +47,7 @@ public class NvAppBase implements GLEventListener {
 //        glWindow.setExclusiveContextThread(t);
 //        animator.setExclusiveContext(t);
 //        animator.setModeBits(false, AnimatorBase.DEFAULT_FRAMES_PER_INTERVAL);
-//        animator.setExclusiveContext(true);
+        animator.setExclusiveContext(true);
         animator.setRunAsFastAsPossible(true);
         animator.setUpdateFPSFrames(500, System.out);
         animator.start();

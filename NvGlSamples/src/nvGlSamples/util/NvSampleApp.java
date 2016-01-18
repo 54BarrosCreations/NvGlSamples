@@ -26,7 +26,7 @@ public class NvSampleApp extends NvAppBase {
     protected float frameDelta;
     private long[] frameGpuTime;
     private long totalGpuTime;
-    private int[] queryId;
+//    private int[] queryId;
 
     public NvSampleApp() {
 
@@ -40,7 +40,7 @@ public class NvSampleApp extends NvAppBase {
 
 //        totalTime = (long) -1e6;
         frameGpuTime = new long[1];
-        queryId = new int[1];
+//        queryId = new int[1];
     }
 
     @Override
@@ -92,7 +92,9 @@ public class NvSampleApp extends NvAppBase {
 
         timeSinceLast1k = System.currentTimeMillis();
 
-        gl4.glGenQueries(1, queryId, 0);
+//        gl4.glGenQueries(1, queryId, 0);
+
+        gl4.setSwapInterval(0);
     }
 
     protected void initRendering(GL4 gl4) {
@@ -122,8 +124,8 @@ public class NvSampleApp extends NvAppBase {
 
         GL4 gl4 = glad.getGL().getGL4();
 
-        gl4.glBeginQuery(GL4.GL_TIME_ELAPSED, queryId[0]);
-        {
+//        gl4.glBeginQuery(GL4.GL_TIME_ELAPSED, queryId[0]);
+//        {
             frameTimer.start();
 //        drawTimer.start();
 
@@ -132,10 +134,10 @@ public class NvSampleApp extends NvAppBase {
             checkGlError(gl4);
 
             glad.swapBuffers();
-        }
-        gl4.glEndQuery(GL4.GL_TIME_ELAPSED);
-        gl4.glGetQueryObjecti64v(queryId[0], GL4.GL_QUERY_RESULT, frameGpuTime, 0);
-        totalGpuTime += frameGpuTime[0];
+//        }
+//        gl4.glEndQuery(GL4.GL_TIME_ELAPSED);
+//        gl4.glGetQueryObjecti64v(queryId[0], GL4.GL_QUERY_RESULT, frameGpuTime, 0);
+//        totalGpuTime += frameGpuTime[0];
 
 //        drawTimer.stop();
 //        drawTime += drawTimer.getTime();

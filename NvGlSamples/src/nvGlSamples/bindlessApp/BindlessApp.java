@@ -213,7 +213,7 @@ public class BindlessApp extends NvSampleApp {
         // Initialize the per mesh Uniforms
         updatePerMeshUniforms(gl4, 0f);
 
-        checkGlError(gl4);
+        checkGlError(gl4);        
     }
 
     private void checkExtenstions(GL4 gl4) {
@@ -542,33 +542,33 @@ public class BindlessApp extends NvSampleApp {
             dt = Math.min(.00005f / minimumFrameDeltaTime, .01f);
             t += dt * Mesh.drawCallsPerState;
 
-//            updatePerMeshUniforms(gl4, t);
+            updatePerMeshUniforms(gl4, t);
         }
 
         // Set up default per mesh uniforms. These may be changed on a per mesh 
         // basis in the rendering loop below 
-        if (useBindlessUniforms) {
-            // *** INTERESTING ***
-            // Pass a GPU pointer to the vertex shader for the per mesh uniform 
-            // data via a vertex attribute
-            gl4.glVertexAttribI2i(bindlessPerMeshUniformsPtrAttribLocation,
-                    (int) (perMeshUniformsGPUPtr[0] & 0xFFFFFFFF),
-                    (int) ((perMeshUniformsGPUPtr[0] >> 32) & 0xFFFFFFFF));
-        } else {
-            gl4.glBindBufferBase(GL4.GL_UNIFORM_BUFFER, 3, perMeshUniforms[0]);
-            gl4.glNamedBufferSubData(perMeshUniforms[0], 0, PerMeshUniforms.size(),
-                    GLBuffers.newDirectFloatBuffer(perMeshUniformsData[0].toFloatbuffer()));
-        }
-
-        // If all of the meshes are sharing the same vertex format, we can just 
-        // set the vertex format once
-        if (!Mesh.setVertexFormatOnEveryDrawCall) {
-            Mesh.renderPrep(gl4);
-        }
+//        if (useBindlessUniforms) {
+//            // *** INTERESTING ***
+//            // Pass a GPU pointer to the vertex shader for the per mesh uniform 
+//            // data via a vertex attribute
+//            gl4.glVertexAttribI2i(bindlessPerMeshUniformsPtrAttribLocation,
+//                    (int) (perMeshUniformsGPUPtr[0] & 0xFFFFFFFF),
+//                    (int) ((perMeshUniformsGPUPtr[0] >> 32) & 0xFFFFFFFF));
+//        } else {
+//            gl4.glBindBufferBase(GL4.GL_UNIFORM_BUFFER, 3, perMeshUniforms[0]);
+//            gl4.glNamedBufferSubData(perMeshUniforms[0], 0, PerMeshUniforms.size(),
+//                    GLBuffers.newDirectFloatBuffer(perMeshUniformsData[0].toFloatbuffer()));
+//        }
+//
+//        // If all of the meshes are sharing the same vertex format, we can just 
+//        // set the vertex format once
+//        if (!Mesh.setVertexFormatOnEveryDrawCall) {
+//            Mesh.renderPrep(gl4);
+//        }
 
         // Render all of the meshes
-        for (int i = 0; i < meshes.length; i++) {
-
+//        for (int i = 0; i < meshes.length; i++) {
+//
 //            // If enabled, update the per mesh uniforms for each mesh rendered
 //            if (usePerMeshUniforms) {
 //
@@ -613,14 +613,14 @@ public class BindlessApp extends NvSampleApp {
 //
 //                Mesh.renderFinish(gl4);
 //            }
-        }
-
-        // If we're sharing vertex formats between meshes, we only have to reset 
-        // vertex format to a default state once
-        if (!Mesh.setVertexFormatOnEveryDrawCall) {
-
-            Mesh.renderFinish(gl4);
-        }
+//        }
+//
+//        // If we're sharing vertex formats between meshes, we only have to reset 
+//        // vertex format to a default state once
+//        if (!Mesh.setVertexFormatOnEveryDrawCall) {
+//
+//            Mesh.renderFinish(gl4);
+//        }
 
         // Disable the vertex and pixel shader
         shader.unbind(gl4);
