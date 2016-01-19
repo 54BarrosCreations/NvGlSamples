@@ -39,6 +39,7 @@ import com.jogamp.newt.NewtFactory;
 import com.jogamp.newt.Screen;
 import com.jogamp.newt.opengl.GLWindow;
 import static com.jogamp.opengl.GL.GL_EXTENSIONS;
+import static com.jogamp.opengl.GL2ES3.GL_COLOR;
 import static com.jogamp.opengl.GL2ES3.GL_NUM_EXTENSIONS;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.GLAutoDrawable;
@@ -89,7 +90,7 @@ public class BindlessApp implements GLEventListener {
 
         animator = new Animator(glWindow);
         animator.setRunAsFastAsPossible(true);
-        animator.setUpdateFPSFrames(500, System.out);
+        animator.setUpdateFPSFrames(1000, System.out);
         animator.start();
     }
 
@@ -133,19 +134,19 @@ public class BindlessApp implements GLEventListener {
 
         // Create our pixel and vertex shader
         NvGLSLProgram.createFromFiles(gl4, "src/gl4_kepler/bindlessApp/shaders", "bindless");
-        bindlessPerMeshUniformsPtrAttribLocation
-                = shader.getAttribLocation(gl4, "bindlessPerMeshUniformsPtr", true);
-        System.out.println("bindlessPerMeshUniformsPtrAttribLocation " + bindlessPerMeshUniformsPtrAttribLocation);
-
-        // Set the initial view
-        transformer.setRotationVec(new Vec3((float) Math.toRadians(30.0f), (float) Math.toRadians(30.0f), 0.0f));
-
-        // Create the meshes
-        meshes = new Mesh[1 + SQRT_BUILDING_COUNT * SQRT_BUILDING_COUNT];
-        perMeshUniformsData = new PerMeshUniforms[meshes.length];
-
-        // Create a mesh for the ground
-        meshes[0] = createGround(gl4, new Vec3(0.f, -.001f, 0.f), new Vec3(5.0f, 0.0f, 5.0f));
+//        bindlessPerMeshUniformsPtrAttribLocation
+//                = shader.getAttribLocation(gl4, "bindlessPerMeshUniformsPtr", true);
+//        System.out.println("bindlessPerMeshUniformsPtrAttribLocation " + bindlessPerMeshUniformsPtrAttribLocation);
+//
+//        // Set the initial view
+//        transformer.setRotationVec(new Vec3((float) Math.toRadians(30.0f), (float) Math.toRadians(30.0f), 0.0f));
+//
+//        // Create the meshes
+//        meshes = new Mesh[1 + SQRT_BUILDING_COUNT * SQRT_BUILDING_COUNT];
+//        perMeshUniformsData = new PerMeshUniforms[meshes.length];
+//
+//        // Create a mesh for the ground
+//        meshes[0] = createGround(gl4, new Vec3(0.f, -.001f, 0.f), new Vec3(5.0f, 0.0f, 5.0f));
     }
 
     /**
@@ -176,12 +177,16 @@ public class BindlessApp implements GLEventListener {
 
         Mesh ground = new Mesh();
         ground.update(gl4, vertices, indices);
-        
+
         return ground;
     }
 
     @Override
     public void display(GLAutoDrawable drawable) {
+
+        GL4 gl4 = drawable.getGL().getGL4();
+
+        gl4.glClearBufferfv(GL_COLOR, 0, new float[]{1.0f, 0.5f, 0.0f, 1.0f}, 0);
 
     }
 
