@@ -36,6 +36,7 @@ package gl4_kepler.bindlessApp;
 import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_BUFFER_SIZE;
 import static com.jogamp.opengl.GL.GL_ELEMENT_ARRAY_BUFFER;
+import static com.jogamp.opengl.GL.GL_STATIC_DRAW;
 import static com.jogamp.opengl.GL2ES3.GL_READ_ONLY;
 import static com.jogamp.opengl.GL2GL3.GL_BUFFER_GPU_ADDRESS_NV;
 import com.jogamp.opengl.GL4;
@@ -51,7 +52,7 @@ public class Mesh {
 
     private int vertexCount;            // Number of vertices in mesh
     private int indexCount;             // Number of indices in mesh
-    private int[] vertexBuffer = {0};           // vertex buffer object for vertices
+    private int[] vertexBuffer = {0, 0};           // vertex buffer object for vertices
     private int[] indexBuffer = {0};            // vertex buffer object for indices
     private int paramsBuffer;           // uniform buffer object for params
     private int[] vertexBufferSize = {0};
@@ -78,11 +79,11 @@ public class Mesh {
     public void update(GL4 gl4, Vertex[] vertices, short[] indices) {
 
         if (vertexCount == 0) {
-            gl4.glGenBuffers(1, vertexBuffer, 0);
+            gl4.glCreateBuffers(2, vertexBuffer, 0);
         }
 
         if (indexCount == 0) {
-            gl4.glGenBuffers(1, indexBuffer, 0);
+            gl4.glCreateBuffers(1, indexBuffer, 0);
         }
 
         // Stick the data for the vertices and indices in their respective buffers
@@ -90,25 +91,28 @@ public class Mesh {
         for (Vertex vertex : vertices) {
             verticesBuffer.put(vertex.toByteArray());
         }
-        gl4.glNamedBufferData(vertexBuffer[0], Vertex.SIZEOF * vertices.length, verticesBuffer.rewind(), vertexCount);
+        gl4.glNamedBufferData(vertexBuffer[0], verticesBuffer.capacity(), verticesBuffer.rewind(), GL_STATIC_DRAW);
 
         ShortBuffer indicesBuffer = GLBuffers.newDirectShortBuffer(indices);
-        gl4.glNamedBufferData(indexBuffer[0], Short.BYTES * indices.length, indicesBuffer, vertexCount);
+        gl4.glNamedBufferData(indexBuffer[0], indicesBuffer.capacity(), indicesBuffer, GL_STATIC_DRAW);
 
         // *** INTERESTING ***
         // get the GPU pointer for the vertex buffer and make the vertex buffer resident on the GPU
         gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer[0]);
         gl4.glGetBufferParameterui64vNV(GL_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV, vertexBufferGPUPtr, 0);
-        gl4.glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, vertexBufferSize, 0);
-        gl4.glMakeBufferResidentNV(GL_ARRAY_BUFFER, GL_READ_ONLY);
+//        gl4.glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, vertexBufferSize, 0);
+//        gl4.glMakeBufferResidentNV(GL_ARRAY_BUFFER, GL_READ_ONLY);
         gl4.glBindBuffer(GL_ARRAY_BUFFER, 0);
+//
+//        // *** INTERESTING ***
+//        // get the GPU pointer for the index buffer and make the index buffer resident on the GPU
+//        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer[0]);
+//        gl4.glGetBufferParameterui64vNV(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV, indexBufferGPUPtr, 0);
+//        gl4.glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, indexBufferSize, 0);
+//        gl4.glMakeBufferResidentNV(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
+//        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        // *** INTERESTING ***
-        // get the GPU pointer for the index buffer and make the index buffer resident on the GPU
-        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer[0]);
-        gl4.glGetBufferParameterui64vNV(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV,  indexBufferGPUPtr,0);
-        gl4.glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE,  indexBufferSize,0);
-        gl4.glMakeBufferResidentNV(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
-        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        vertexCount = vertices.length;
+        indexCount = indices.length;
     }
 }

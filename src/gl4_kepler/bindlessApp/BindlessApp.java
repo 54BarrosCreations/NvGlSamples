@@ -37,8 +37,11 @@ import com.jogamp.nativewindow.util.Dimension;
 import com.jogamp.newt.Display;
 import com.jogamp.newt.NewtFactory;
 import com.jogamp.newt.Screen;
+import com.jogamp.newt.event.KeyEvent;
+import com.jogamp.newt.event.KeyListener;
 import com.jogamp.newt.opengl.GLWindow;
 import static com.jogamp.opengl.GL.GL_EXTENSIONS;
+import static com.jogamp.opengl.GL2ES2.GL_STREAM_DRAW;
 import static com.jogamp.opengl.GL2ES3.GL_COLOR;
 import static com.jogamp.opengl.GL2ES3.GL_NUM_EXTENSIONS;
 import com.jogamp.opengl.GL4;
@@ -47,13 +50,14 @@ import com.jogamp.opengl.GLCapabilities;
 import com.jogamp.opengl.GLEventListener;
 import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.util.Animator;
+import jglm.Vec2;
 import jglm.Vec3;
 
 /**
  *
  * @author elect
  */
-public class BindlessApp implements GLEventListener {
+public class BindlessApp implements GLEventListener, KeyListener {
 
     private static int screenIdx = 0;
     private static Dimension windowSize = new Dimension(1024, 768);
@@ -86,7 +90,7 @@ public class BindlessApp implements GLEventListener {
 
         BindlessApp bindlessApp = new BindlessApp();
         glWindow.addGLEventListener(bindlessApp);
-//        glWindow.addKeyListener(bindlessApp);
+        glWindow.addKeyListener(bindlessApp);
 
         animator = new Animator(glWindow);
         animator.setRunAsFastAsPossible(true);
@@ -103,8 +107,12 @@ public class BindlessApp implements GLEventListener {
     private NvGLSLProgram shader;
     private int bindlessPerMeshUniformsPtrAttribLocation;
 
+    // uniform buffer object (UBO) for tranform data
+    private int[] transformUniforms = {0};
+
     // uniform buffer object (UBO) for mesh param data
-    PerMeshUniforms[] perMeshUniformsData;
+    private int[] perMeshUniforms = {0};
+    private PerMeshUniforms[] perMeshUniformsData;
 
     private NvInputTransformer transformer = new NvInputTransformer();
 
@@ -133,20 +141,147 @@ public class BindlessApp implements GLEventListener {
         }
 
         // Create our pixel and vertex shader
-        NvGLSLProgram.createFromFiles(gl4, "src/gl4_kepler/bindlessApp/shaders", "bindless");
-//        bindlessPerMeshUniformsPtrAttribLocation
-//                = shader.getAttribLocation(gl4, "bindlessPerMeshUniformsPtr", true);
-//        System.out.println("bindlessPerMeshUniformsPtrAttribLocation " + bindlessPerMeshUniformsPtrAttribLocation);
-//
-//        // Set the initial view
-//        transformer.setRotationVec(new Vec3((float) Math.toRadians(30.0f), (float) Math.toRadians(30.0f), 0.0f));
-//
-//        // Create the meshes
-//        meshes = new Mesh[1 + SQRT_BUILDING_COUNT * SQRT_BUILDING_COUNT];
-//        perMeshUniformsData = new PerMeshUniforms[meshes.length];
-//
-//        // Create a mesh for the ground
-//        meshes[0] = createGround(gl4, new Vec3(0.f, -.001f, 0.f), new Vec3(5.0f, 0.0f, 5.0f));
+        shader = NvGLSLProgram.createFromFiles(gl4, "src/gl4_kepler/bindlessApp/shaders", "bindless");
+        bindlessPerMeshUniformsPtrAttribLocation
+                = shader.getAttribLocation(gl4, "bindlessPerMeshUniformsPtr", true);
+        System.out.println("bindlessPerMeshUniformsPtrAttribLocation " + bindlessPerMeshUniformsPtrAttribLocation);
+
+        // Set the initial view
+        transformer.setRotationVec(new Vec3((float) Math.toRadians(30.0f), (float) Math.toRadians(30.0f), 0.0f));
+
+        // Create the meshes
+        meshes = new Mesh[1 + SQRT_BUILDING_COUNT * SQRT_BUILDING_COUNT];
+        perMeshUniformsData = new PerMeshUniforms[meshes.length];
+
+        // Create a mesh for the ground
+        meshes[0] = createGround(gl4, new Vec3(0.f, -.001f, 0.f), new Vec3(5.0f, 0.0f, 5.0f));
+
+        // Create "building" meshes
+        int meshIndex = 0;
+        for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
+
+            for (int k = 0; k < SQRT_BUILDING_COUNT; k++) {
+
+                float x, y, z;
+                float size;
+
+                x = (float) i / SQRT_BUILDING_COUNT - 0.5f;
+                y = 0.0f;
+                z = (float) k / SQRT_BUILDING_COUNT - 0.5f;
+                size = .025f * (100.0f / SQRT_BUILDING_COUNT);
+
+                meshes[meshIndex + 1] = createBuilding(gl4, new Vec3(5.0f * x, y, 5.0f * z),
+                        new Vec3(size, (float) (0.2f + .1f * Math.sin(5.0f * i * k)), size),
+                        new Vec2((float) k / SQRT_BUILDING_COUNT, (float) i / SQRT_BUILDING_COUNT));
+
+                meshIndex++;
+            }
+        }
+        /**
+         * TODO.
+         */
+        // Initialize Bindless Textures
+//	InitBindlessTextures();
+
+        // create Uniform Buffer Object (UBO) for transform data and initialize 
+        gl4.glCreateBuffers(1, transformUniforms, 0);
+        gl4.glNamedBufferData(transformUniforms[0], TransformUniforms.SIZEOF, null, GL_STREAM_DRAW);
+
+        // create Uniform Buffer Object (UBO) for param data and initialize
+        gl4.glGenBuffers(1, perMeshUniforms, 0);
+    }
+
+    /**
+     * Create a very simple building mesh.
+     */
+    private Mesh createBuilding(GL4 gl4, Vec3 pos, Vec3 dim, Vec2 uv) {
+        Vertex[] vertices = new Vertex[4 * 6];
+        short[] indices = new short[6 * 6];
+        float r, g, b;
+
+        dim.x *= 0.5f;
+        dim.z *= 0.5f;
+
+        // Generate a simple building model (i.e. a box). All of the "buildings" are in world space
+        // +Z face
+        r = randomColor();
+        g = randomColor();
+        b = randomColor();
+        vertices[0] = new Vertex(-dim.x + pos.x, 0.0f + pos.y, +dim.z + pos.z, r, g, b, 1.0f);
+        vertices[1] = new Vertex(+dim.x + pos.x, 0.0f + pos.y, +dim.z + pos.z, r, g, b, 1.0f);
+        vertices[2] = new Vertex(+dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z, r, g, b, 1.0f);
+        vertices[3] = new Vertex(-dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z, r, g, b, 1.0f);
+
+        // -Z face
+        r = randomColor();
+        g = randomColor();
+        b = randomColor();
+        vertices[4] = new Vertex(-dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z, r, g, b, 1.0f);
+        vertices[5] = new Vertex(+dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z, r, g, b, 1.0f);
+        vertices[6] = new Vertex(+dim.x + pos.x, 0.0f + pos.y, -dim.z + pos.z, r, g, b, 1.0f);
+        vertices[7] = new Vertex(-dim.x + pos.x, 0.0f + pos.y, -dim.z + pos.z, r, g, b, 1.0f);
+
+        // +X face
+        r = randomColor();
+        g = randomColor();
+        b = randomColor();
+        vertices[8] = new Vertex(+dim.x + pos.x, 0.0f + pos.y, +dim.z + pos.z, r, g, b, 1.0f);
+        vertices[9] = new Vertex(+dim.x + pos.x, 0.0f + pos.y, -dim.z + pos.z, r, g, b, 1.0f);
+        vertices[10] = new Vertex(+dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z, r, g, b, 1.0f);
+        vertices[11] = new Vertex(+dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z, r, g, b, 1.0f);
+
+        // -X face
+        r = randomColor();
+        g = randomColor();
+        b = randomColor();
+        vertices[12] = new Vertex(-dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z, r, g, b, 1.0f);
+        vertices[13] = new Vertex(-dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z, r, g, b, 1.0f);
+        vertices[14] = new Vertex(-dim.x + pos.x, 0.0f + pos.y, -dim.z + pos.z, r, g, b, 1.0f);
+        vertices[15] = new Vertex(-dim.x + pos.x, 0.0f + pos.y, +dim.z + pos.z, r, g, b, 1.0f);
+
+        // +Y face
+        r = randomColor();
+        g = randomColor();
+        b = randomColor();
+        vertices[16] = new Vertex(-dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z, r, g, b, 1.0f);
+        vertices[17] = new Vertex(+dim.x + pos.x, dim.y + pos.y, +dim.z + pos.z, r, g, b, 1.0f);
+        vertices[18] = new Vertex(+dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z, r, g, b, 1.0f);
+        vertices[19] = new Vertex(-dim.x + pos.x, dim.y + pos.y, -dim.z + pos.z, r, g, b, 1.0f);
+
+        // -Y face
+        r = randomColor();
+        g = randomColor();
+        b = randomColor();
+        vertices[20] = new Vertex(-dim.x + pos.x, 0.0f + pos.y, -dim.z + pos.z, r, g, b, 1.0f);
+        vertices[21] = new Vertex(+dim.x + pos.x, 0.0f + pos.y, -dim.z + pos.z, r, g, b, 1.0f);
+        vertices[22] = new Vertex(+dim.x + pos.x, 0.0f + pos.y, +dim.z + pos.z, r, g, b, 1.0f);
+        vertices[23] = new Vertex(-dim.x + pos.x, 0.0f + pos.y, +dim.z + pos.z, r, g, b, 1.0f);
+
+        // Create the indices
+        for (int i = 0; i < 6; i++) {
+
+            for (int j = 0; j < 24; j += 4) {
+                indices[i * 6 + 0] = (short) (0 + j);
+                indices[i * 6 + 1] = (short) (1 + j);
+                indices[i * 6 + 2] = (short) (2 + j);
+
+                indices[i * 6 + 3] = (short) (0 + j);
+                indices[i * 6 + 4] = (short) (2 + j);
+                indices[i * 6 + 5] = (short) (3 + j);
+            }
+        }
+
+        Mesh building = new Mesh();
+        building.update(gl4, vertices, indices);
+
+        return building;
+    }
+
+    /**
+     * Generates a random color.
+     */
+    private float randomColor() {
+        return (float) (((1 - Math.random()) % 255) / 255.0f);
     }
 
     /**
@@ -234,4 +369,14 @@ public class BindlessApp implements GLEventListener {
         BindlessApp.glWindow.destroy();
     }
 
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+            quit();
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+    }
 }
