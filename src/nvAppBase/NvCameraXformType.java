@@ -31,7 +31,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //----------------------------------------------------------------------------------
-package gl4_kepler.bindlessApp;
+package nvAppBase;
 
 /// Camera transform mode.
 public enum NvCameraXformType {

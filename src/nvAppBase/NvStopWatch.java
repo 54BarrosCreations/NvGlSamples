@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------
-// File:        gl4-kepler/BindlessApp/BindlessApp.cpp
+// File:        NvAppBase/MainWin32.cpp
 // SDK Version: v2.11 
 // Email:       gameworks@nvidia.com
 // Site:        http://developer.nvidia.com/
@@ -31,60 +31,84 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //----------------------------------------------------------------------------------
-package gl4_kepler.bindlessApp;
-
-import static com.jogamp.opengl.GL2ES2.GL_FRAGMENT_SHADER;
-import static com.jogamp.opengl.GL2ES2.GL_VERTEX_SHADER;
-import com.jogamp.opengl.GL4;
-import com.jogamp.opengl.util.glsl.ShaderCode;
-import com.jogamp.opengl.util.glsl.ShaderProgram;
+package nvAppBase;
 
 /**
  *
  * @author elect
  */
-public class NvGLSLProgram {
+public class NvStopWatch {
 
-    private int program;
-    private boolean logAllMissing = false;
-    private boolean strict;
+    private long startTime;
+    private long diffTime;
+    private boolean running;
 
-    private NvGLSLProgram(int program, boolean strict) {
-        this.program = program;
-        this.strict = strict;
+    // Constructor, default
+    public NvStopWatch() {
+        running = false;
+        diffTime = 0;
     }
 
-    public static NvGLSLProgram createFromFiles(GL4 gl4, String root, String shaderName) {
-        return createFromFiles(gl4, root, shaderName, false);
+    /**
+     * Start time measurement.
+     */
+    public void start() {
+        /**
+         * IMPORTANT. Avoid System.currentTimeMillis() as on Ubuntu can shift
+         * and getting drifted returning a negative difference.
+         */
+//        startTime = System.currentTimeMillis();
+        startTime = System.nanoTime();
+        running = true;
     }
 
-    public static NvGLSLProgram createFromFiles(GL4 gl4, String root, String shaderName, boolean strict) {
-
-        ShaderProgram shaderProgram = new ShaderProgram();
-
-        ShaderCode vertShaderCode = ShaderCode.create(gl4, GL_VERTEX_SHADER,
-                NvGLSLProgram.class, root, null, shaderName, "vert", null, true);
-        ShaderCode fragShaderCode = ShaderCode.create(gl4, GL_FRAGMENT_SHADER,
-                NvGLSLProgram.class, root, null, shaderName, "frag", null, true);
-
-        shaderProgram.add(vertShaderCode);
-        shaderProgram.add(fragShaderCode);
-        shaderProgram.link(gl4, System.out);
-        shaderProgram.program();
-
-        return new NvGLSLProgram(shaderProgram.program(), strict);
+    /**
+     * Stop time measurement.
+     */
+    public void stop() {
+        diffTime = getDiffTime();
+//        if (diffTime < 0) {
+//            System.out.println("diffTime " + diffTime);
+//        }
+        running = false;
     }
 
-    public int getAttribLocation(GL4 gl4, String attribute, boolean isOptional) {
-
-        int result = gl4.glGetAttribLocation(program, attribute);
-
-        if (result == -1) {
-            if ((logAllMissing || strict) && !isOptional) {
-                System.err.println("could not find attribute " + attribute + " in program " + program);
-            }
+    /**
+     * Reset time counters to zero.
+     */
+    public void reset() {
+        diffTime = 0;
+        if (running) {
+            start();
         }
+    }
 
-        return result;
+    /**
+     * In ns.
+     * @return 
+     */
+    public float getTime() {
+//        float ms = running ? getDiffTime() : diffTime;
+//        if ((ms) < 0) {
+//            System.out.println("ms " + ms + " running " + running + " diffTime " + diffTime);
+//        }
+        return running ? getDiffTime() : diffTime;
+    }
+
+    /**
+     * Get difference between start time and current time.
+     *
+     * @return
+     */
+    private long getDiffTime() {
+//        long now = System.currentTimeMillis();
+        long now = System.nanoTime();
+        return now - startTime;
+//        long diff = now - startTime;
+//        if (diff < 0) {
+//            System.out.println("diff " + diff + " now " + now + " startTime " + startTime);
+//            diff = (long) BindlessApp.minimumFrameDeltaTime;
+//        }
+//        return diff;
     }
 }
