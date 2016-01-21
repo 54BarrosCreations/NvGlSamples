@@ -211,7 +211,7 @@ public class BindlessApp extends NvSampleApp {
 
             // Give the uniform data to the GPU
             FloatBuffer perMeshUniformsbuffer = GLBuffers.newDirectFloatBuffer(perMeshUniformsData[0].toFloatArray());
-            gl4.glNamedBufferSubData(perMeshUniformsName[0], 0, perMeshUniformsbuffer.capacity(),
+            gl4.glNamedBufferSubData(perMeshUniformsName[0], 0, perMeshUniformsbuffer.capacity() * Float.BYTES,
                     perMeshUniformsbuffer.rewind());
         }
 
@@ -403,7 +403,7 @@ public class BindlessApp extends NvSampleApp {
 
             dt = Math.min(0.00005f / minimumFrameDeltaTime, .01f);
             t += dt * Mesh.drawCallsPerState;
-            
+            System.out.println("t "+t);
             updatePerMeshUniforms(gl4, t);
         }
 
