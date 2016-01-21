@@ -51,6 +51,7 @@ import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
+import nvAppBase.Semantic;
 
 /**
  *
@@ -97,12 +98,26 @@ public class Mesh {
         // Stick the data for the vertices and indices in their respective buffers
         ByteBuffer verticesBuffer = GLBuffers.newDirectByteBuffer(Vertex.SIZEOF * vertices.length);
         for (Vertex vertex : vertices) {
-            verticesBuffer.put(vertex.toByteArray());
+            verticesBuffer.put(vertex.toByteBuffer());
         }
+//        for (int i = 0; i < 4; i++) {
+//            System.out.println("" + verticesBuffer.getFloat(i * Vertex.SIZEOF + 0 * Float.BYTES));
+//            System.out.println("" + verticesBuffer.getFloat(i * Vertex.SIZEOF + 1 * Float.BYTES));
+//            System.out.println("" + verticesBuffer.getFloat(i * Vertex.SIZEOF + 2 * Float.BYTES));
+//        }
+//        for (int i = 0; i < 4; i++) {
+//            System.out.println("" + verticesBuffer.get(i * Vertex.SIZEOF + Vertex.ColorOffset + 0));
+//            System.out.println("" + verticesBuffer.get(i * Vertex.SIZEOF + Vertex.ColorOffset + 1));
+//            System.out.println("" + verticesBuffer.get(i * Vertex.SIZEOF + Vertex.ColorOffset + 2));
+//            System.out.println("" + verticesBuffer.get(i * Vertex.SIZEOF + Vertex.ColorOffset + 3));
+//        }
         gl4.glNamedBufferData(vertexBuffer[0], verticesBuffer.capacity(), verticesBuffer.rewind(), GL_STATIC_DRAW);
 
         ShortBuffer indicesBuffer = GLBuffers.newDirectShortBuffer(indices);
-        gl4.glNamedBufferData(indexBuffer[0], indicesBuffer.capacity(), indicesBuffer, GL_STATIC_DRAW);
+//        for (int i = 0; i < 6; i++) {
+//            System.out.println("" + indicesBuffer.get(i));
+//        }
+        gl4.glNamedBufferData(indexBuffer[0], indicesBuffer.capacity(), indicesBuffer.rewind(), GL_STATIC_DRAW);
 
         // *** INTERESTING ***
         // get the GPU pointer for the vertex buffer and make the vertex buffer resident on the GPU
@@ -134,26 +149,28 @@ public class Mesh {
         if (enableVBUM) {
 
             // Specify the vertex format
-            gl4.glVertexAttribFormatNV(0, 3, GL_FLOAT, false, Vertex.SIZEOF);          // Position in attribute 0 that is 3 floats
-            gl4.glVertexAttribFormatNV(1, 4, GL_UNSIGNED_BYTE, true, Vertex.SIZEOF);   // Color in attribute 1 that is 4 unsigned bytes
+            // Position in attribute 0 that is 3 floats
+            gl4.glVertexAttribFormatNV(Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex.SIZEOF);
+            // Color in attribute 1 that is 4 unsigned bytes
+            gl4.glVertexAttribFormatNV(Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true, Vertex.SIZEOF);
 
             // Enable the relevent attributes
-            gl4.glEnableVertexAttribArray(0);
-            gl4.glEnableVertexAttribArray(1);
+            gl4.glEnableVertexAttribArray(Semantic.Attr.POSITION);
+            gl4.glEnableVertexAttribArray(Semantic.Attr.COLOR);
 
             // Enable a bunch of other attributes if we're using the heavy vertex format option
-            if (useHeavyVertexFormat == true) {
-                gl4.glVertexAttribFormatNV(3, 4, GL_FLOAT, false, Vertex.SIZEOF);
-                gl4.glVertexAttribFormatNV(4, 4, GL_FLOAT, false, Vertex.SIZEOF);
-                gl4.glVertexAttribFormatNV(5, 4, GL_FLOAT, false, Vertex.SIZEOF);
-                gl4.glVertexAttribFormatNV(6, 4, GL_FLOAT, false, Vertex.SIZEOF);
-                gl4.glVertexAttribFormatNV(7, 4, GL_FLOAT, false, Vertex.SIZEOF);
+            if (useHeavyVertexFormat) {
+                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR3, 4, GL_FLOAT, false, Vertex.SIZEOF);
+                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR4, 4, GL_FLOAT, false, Vertex.SIZEOF);
+                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR5, 4, GL_FLOAT, false, Vertex.SIZEOF);
+                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR6, 4, GL_FLOAT, false, Vertex.SIZEOF);
+                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR7, 4, GL_FLOAT, false, Vertex.SIZEOF);
 
-                gl4.glEnableVertexAttribArray(3);
-                gl4.glEnableVertexAttribArray(4);
-                gl4.glEnableVertexAttribArray(5);
-                gl4.glEnableVertexAttribArray(6);
-                gl4.glEnableVertexAttribArray(7);
+                gl4.glEnableVertexAttribArray(Semantic.Attr.ATTR3);
+                gl4.glEnableVertexAttribArray(Semantic.Attr.ATTR4);
+                gl4.glEnableVertexAttribArray(Semantic.Attr.ATTR5);
+                gl4.glEnableVertexAttribArray(Semantic.Attr.ATTR6);
+                gl4.glEnableVertexAttribArray(Semantic.Attr.ATTR7);
             }
 
             // Enable Vertex Buffer Unified Memory (VBUM) for the vertex attributes
@@ -172,17 +189,17 @@ public class Mesh {
             gl4.glBindVertexArray(Mesh.vao[0]);
 
             // For Vertex Array Objects (VAO), enable the vertex attributes
-            gl4.glEnableVertexArrayAttrib(vao[0], 0);
-            gl4.glEnableVertexArrayAttrib(vao[0], 1);
+            gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.POSITION);
+            gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.COLOR);
 
             // Enable a bunch of other attributes if we're using the heavy vertex format option
-            if (useHeavyVertexFormat == true) {
+            if (useHeavyVertexFormat) {
 
-                gl4.glEnableVertexArrayAttrib(vao[0], 3);
-                gl4.glEnableVertexArrayAttrib(vao[0], 4);
-                gl4.glEnableVertexArrayAttrib(vao[0], 5);
-                gl4.glEnableVertexArrayAttrib(vao[0], 6);
-                gl4.glEnableVertexArrayAttrib(vao[0], 7);
+                gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR3);
+                gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR4);
+                gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR5);
+                gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR6);
+                gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR7);
             }
 
         }
@@ -208,25 +225,25 @@ public class Mesh {
             // *** INTERESTING ***
             // Set up the pointers in GPU memory to the vertex attributes.
             // The GPU pointer to the vertex buffer was stored in Mesh::update() after the buffer was filled
-            gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, 0,
+            gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, Semantic.Attr.POSITION,
                     vertexBufferGPUPtr[0] + Vertex.PositionOffset,
                     vertexBufferSize[0] - Vertex.PositionOffset);
-            gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, 1,
+            gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, Semantic.Attr.COLOR,
                     vertexBufferGPUPtr[0] + Vertex.ColorOffset,
                     vertexBufferSize[0] - Vertex.ColorOffset);
 
             // Set a bunch of other attributes if we're using the heavy vertex format option
             if (useHeavyVertexFormat) {
 
-                gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, 3,
+                gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, Semantic.Attr.ATTR3,
                         vertexBufferGPUPtr[0] + Vertex.Attrib1Offset, vertexBufferSize[0] - Vertex.Attrib1Offset);
-                gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, 4,
+                gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, Semantic.Attr.ATTR4,
                         vertexBufferGPUPtr[0] + Vertex.Attrib2Offset, vertexBufferSize[0] - Vertex.Attrib2Offset);
-                gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, 5,
+                gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, Semantic.Attr.ATTR5,
                         vertexBufferGPUPtr[0] + Vertex.Attrib3Offset, vertexBufferSize[0] - Vertex.Attrib3Offset);
-                gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, 6,
+                gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, Semantic.Attr.ATTR6,
                         vertexBufferGPUPtr[0] + Vertex.Attrib4Offset, vertexBufferSize[0] - Vertex.Attrib4Offset);
-                gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, 7,
+                gl4.glBufferAddressRangeNV(GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV, Semantic.Attr.ATTR7,
                         vertexBufferGPUPtr[0] + Vertex.Attrib5Offset, vertexBufferSize[0] - Vertex.Attrib5Offset);
             }
 
@@ -247,18 +264,18 @@ public class Mesh {
             ////////////////////////////////////////////////////////////////////////////////
 
             // Set up attribute 0 for the position (3 floats)
-            gl4.glVertexArrayAttribFormat(vao[0], 0, 3, GL_FLOAT, false, Vertex.PositionOffset);
+            gl4.glVertexArrayAttribFormat(vao[0], Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex.PositionOffset);
 
             // Set up attribute 1 for the color (4 unsigned bytes)
-            gl4.glVertexArrayAttribFormat(vao[0], 1, 4, GL_UNSIGNED_BYTE, true, Vertex.ColorOffset);
+            gl4.glVertexArrayAttribFormat(vao[0], Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true, Vertex.ColorOffset);
 
             int bindingIndex = 0;
             gl4.glVertexArrayVertexBuffer(vao[0], bindingIndex, vertexBuffer[0], 0, Vertex.SIZEOF);
-            gl4.glVertexArrayAttribBinding(vao[0], 0, bindingIndex);
-            gl4.glVertexArrayAttribBinding(vao[0], 1, bindingIndex);
+            gl4.glVertexArrayAttribBinding(vao[0], Semantic.Attr.POSITION, bindingIndex);
+            gl4.glVertexArrayAttribBinding(vao[0], Semantic.Attr.COLOR, bindingIndex);
 
             // Set up a bunch of other attributes if we're using the heavy vertex format option
-            if (useHeavyVertexFormat == true) {
+            if (useHeavyVertexFormat) {
 
                 gl4.glVertexArrayAttribFormat(vao[0], 3, 4, GL_FLOAT, false, Vertex.Attrib1Offset);
                 gl4.glVertexArrayAttribFormat(vao[0], 4, 4, GL_FLOAT, false, Vertex.Attrib2Offset);
@@ -275,6 +292,7 @@ public class Mesh {
 
             // Set up the indices
             gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer[0]);
+//            gl4.glVertexArrayElementBuffer(vao[0], indexBuffer[0]);
 
             // Do the actual drawing
             for (int i = 0; i < drawCallsPerState; i++) {
@@ -299,7 +317,7 @@ public class Mesh {
             gl4.glDisableVertexAttribArray(2);
 
             // Disable a bunch of other attributes if we're using the heavy vertex format option
-            if (useHeavyVertexFormat == true) {
+            if (useHeavyVertexFormat) {
 
                 gl4.glDisableVertexAttribArray(3);
                 gl4.glDisableVertexAttribArray(4);
@@ -315,17 +333,17 @@ public class Mesh {
 
             // Rendering with Vertex Array Objects (VAO)
             // Reset state
-            gl4.glDisableVertexArrayAttrib(vao[0], 0);
-            gl4.glDisableVertexArrayAttrib(vao[0], 1);
+            gl4.glDisableVertexArrayAttrib(vao[0], Semantic.Attr.POSITION);
+            gl4.glDisableVertexArrayAttrib(vao[0], Semantic.Attr.COLOR);
 
             // Disable a bunch of other attributes if we're using the heavy vertex format option
-            if (useHeavyVertexFormat == true) {
+            if (useHeavyVertexFormat) {
 
-                gl4.glDisableVertexArrayAttrib(vao[0], 3);
-                gl4.glDisableVertexArrayAttrib(vao[0], 4);
-                gl4.glDisableVertexArrayAttrib(vao[0], 5);
-                gl4.glDisableVertexArrayAttrib(vao[0], 6);
-                gl4.glDisableVertexArrayAttrib(vao[0], 7);
+                gl4.glDisableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR3);
+                gl4.glDisableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR4);
+                gl4.glDisableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR5);
+                gl4.glDisableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR6);
+                gl4.glDisableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR7);
             }
 
             gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
