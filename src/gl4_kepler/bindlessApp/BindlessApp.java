@@ -35,7 +35,7 @@ import nvAppBase.ProgramEntry;
  */
 public class BindlessApp extends NvSampleApp {
 
-    private final int SQRT_BUILDING_COUNT = 0;
+    private final int SQRT_BUILDING_COUNT = 1;
 
     // Simple collection of meshes to render
     private Mesh[] meshes;
@@ -396,14 +396,14 @@ public class BindlessApp extends NvSampleApp {
             float dt;
 
             deltaTime = getFrameDeltaTime();
-
+            
             if (deltaTime < minimumFrameDeltaTime) {
                 minimumFrameDeltaTime = deltaTime;
             }
 
             dt = Math.min(0.00005f / minimumFrameDeltaTime, .01f);
             t += dt * Mesh.drawCallsPerState;
-
+            
             updatePerMeshUniforms(gl4, t);
         }
 
@@ -445,8 +445,10 @@ public class BindlessApp extends NvSampleApp {
                 } else {
 
                     gl4.glBindBufferBase(GL_UNIFORM_BUFFER, 3, perMeshUniformsName[0]);
-                    FloatBuffer perMeshUniformsBuffer = GLBuffers.newDirectFloatBuffer(perMeshUniformsData[i].toFloatArray());
-                    gl4.glNamedBufferSubData(perMeshUniformsName[0], 0, PerMeshUniforms.SIZEOF, perMeshUniformsBuffer);
+                    FloatBuffer perMeshUniformsBuffer = 
+                            GLBuffers.newDirectFloatBuffer(perMeshUniformsData[i].toFloatArray());
+                    gl4.glNamedBufferSubData(perMeshUniformsName[0], 0, PerMeshUniforms.SIZEOF, 
+                            perMeshUniformsBuffer.rewind());
                 }
             }
 

@@ -49,6 +49,7 @@ import static com.jogamp.opengl.GL2GL3.GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV;
 import static com.jogamp.opengl.GL2GL3.GL_VERTEX_ATTRIB_ARRAY_UNIFIED_NV;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
 import nvAppBase.Semantic;
@@ -100,40 +101,27 @@ public class Mesh {
         for (Vertex vertex : vertices) {
             verticesBuffer.put(vertex.toByteBuffer());
         }
-//        for (int i = 0; i < 4; i++) {
-//            System.out.println("" + verticesBuffer.getFloat(i * Vertex.SIZEOF + 0 * Float.BYTES));
-//            System.out.println("" + verticesBuffer.getFloat(i * Vertex.SIZEOF + 1 * Float.BYTES));
-//            System.out.println("" + verticesBuffer.getFloat(i * Vertex.SIZEOF + 2 * Float.BYTES));
-//        }
-//        for (int i = 0; i < 4; i++) {
-//            System.out.println("" + verticesBuffer.get(i * Vertex.SIZEOF + Vertex.ColorOffset + 0));
-//            System.out.println("" + verticesBuffer.get(i * Vertex.SIZEOF + Vertex.ColorOffset + 1));
-//            System.out.println("" + verticesBuffer.get(i * Vertex.SIZEOF + Vertex.ColorOffset + 2));
-//            System.out.println("" + verticesBuffer.get(i * Vertex.SIZEOF + Vertex.ColorOffset + 3));
-//        }
-        gl4.glNamedBufferData(vertexBuffer[0], verticesBuffer.capacity(), verticesBuffer.rewind(), GL_STATIC_DRAW);
+        verticesBuffer.rewind();
+        gl4.glNamedBufferData(vertexBuffer[0], verticesBuffer.capacity() * Float.BYTES, verticesBuffer, GL_STATIC_DRAW);
 
-        ShortBuffer indicesBuffer = GLBuffers.newDirectShortBuffer(indices);
-//        for (int i = 0; i < 6; i++) {
-//            System.out.println("" + indicesBuffer.get(i));
-//        }
-        gl4.glNamedBufferData(indexBuffer[0], indicesBuffer.capacity(), indicesBuffer.rewind(), GL_STATIC_DRAW);
+        Buffer indicesBuffer = GLBuffers.newDirectShortBuffer(indices).rewind();
+        gl4.glNamedBufferData(indexBuffer[0], indices.length * Short.BYTES, indicesBuffer, GL_STATIC_DRAW);
 
         // *** INTERESTING ***
         // get the GPU pointer for the vertex buffer and make the vertex buffer resident on the GPU
-        gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer[0]);
-        gl4.glGetBufferParameterui64vNV(GL_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV, vertexBufferGPUPtr, 0);
-        gl4.glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, vertexBufferSize, 0);
-        gl4.glMakeBufferResidentNV(GL_ARRAY_BUFFER, GL_READ_ONLY);
-        gl4.glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        // *** INTERESTING ***
-        // get the GPU pointer for the index buffer and make the index buffer resident on the GPU
-        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer[0]);
-        gl4.glGetBufferParameterui64vNV(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV, indexBufferGPUPtr, 0);
-        gl4.glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, indexBufferSize, 0);
-        gl4.glMakeBufferResidentNV(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
-        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+//        gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer[0]);
+//        gl4.glGetBufferParameterui64vNV(GL_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV, vertexBufferGPUPtr, 0);
+//        gl4.glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, vertexBufferSize, 0);
+//        gl4.glMakeBufferResidentNV(GL_ARRAY_BUFFER, GL_READ_ONLY);
+//        gl4.glBindBuffer(GL_ARRAY_BUFFER, 0);
+//
+//        // *** INTERESTING ***
+//        // get the GPU pointer for the index buffer and make the index buffer resident on the GPU
+//        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer[0]);
+//        gl4.glGetBufferParameterui64vNV(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_GPU_ADDRESS_NV, indexBufferGPUPtr, 0);
+//        gl4.glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, indexBufferSize, 0);
+//        gl4.glMakeBufferResidentNV(GL_ELEMENT_ARRAY_BUFFER, GL_READ_ONLY);
+//        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
         vertexCount = vertices.length;
         indexCount = indices.length;

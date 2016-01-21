@@ -92,7 +92,9 @@ public class NvStopWatch {
 //        if ((ms) < 0) {
 //            System.out.println("ms " + ms + " running " + running + " diffTime " + diffTime);
 //        }
-        return running ? getDiffTime() : diffTime;
+//System.out.println(""+(running ? getDiffTime() : diffTime));
+//System.out.println(""+(long) ((double)(running ? getDiffTime() : diffTime) / 1_000_000_000));
+        return (float)(running ? getDiffTime() : diffTime) / 1_000_000_000;
     }
 
     /**

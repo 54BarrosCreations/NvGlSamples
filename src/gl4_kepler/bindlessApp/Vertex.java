@@ -93,6 +93,24 @@ public class Vertex {
         result.rewind();
         return result;
     }
+    
+    public float[] toFloatArray() {
+
+        float[] result = new float[3 + 1 + 4 * 7];
+
+        System.arraycopy(position, 0, result, 0, position.length);
+        result[3] = (color[3] & 0xff) << 24 | (color[2] & 0xff) << 16
+                | (color[1] & 0xff) << 8 | (color[0] & 0xff);
+        System.arraycopy(attrib0, 0, result, 4 + 4 * 0, attrib0.length);
+        System.arraycopy(attrib1, 0, result, 4 + 4 * 1, attrib1.length);
+        System.arraycopy(attrib2, 0, result, 4 + 4 * 2, attrib2.length);
+        System.arraycopy(attrib3, 0, result, 4 + 4 * 3, attrib3.length);
+        System.arraycopy(attrib4, 0, result, 4 + 4 * 4, attrib4.length);
+        System.arraycopy(attrib5, 0, result, 4 + 4 * 5, attrib5.length);
+        System.arraycopy(attrib6, 0, result, 4 + 4 * 6, attrib6.length);
+
+        return result;
+    }
 
 //    @Override
 //    public String toString() {
@@ -109,4 +127,5 @@ public class Vertex {
     public static final int Attrib5Offset = (3 + 4 * 5) * Float.BYTES + 4 * Byte.BYTES; // 96
     public static final int Attrib6Offset = (3 + 4 * 6) * Float.BYTES + 4 * Byte.BYTES; // 112
     public static final int SIZEOF = (3 + 4 * 7) * Float.BYTES + 4 * Byte.BYTES; // 128
+//    public static final int SIZEOF = 3 * Float.BYTES + 4 * Byte.BYTES; // 128
 }
