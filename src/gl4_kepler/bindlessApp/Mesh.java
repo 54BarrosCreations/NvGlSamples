@@ -34,12 +34,15 @@
 package gl4_kepler.bindlessApp;
 
 import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
+import static com.jogamp.opengl.GL.GL_BUFFER_SIZE;
 import static com.jogamp.opengl.GL.GL_ELEMENT_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_FLOAT;
 import static com.jogamp.opengl.GL.GL_STATIC_DRAW;
 import static com.jogamp.opengl.GL.GL_TRIANGLES;
 import static com.jogamp.opengl.GL.GL_UNSIGNED_BYTE;
 import static com.jogamp.opengl.GL.GL_UNSIGNED_SHORT;
+import static com.jogamp.opengl.GL2ES3.GL_READ_ONLY;
+import static com.jogamp.opengl.GL2GL3.GL_BUFFER_GPU_ADDRESS_NV;
 import static com.jogamp.opengl.GL2GL3.GL_ELEMENT_ARRAY_ADDRESS_NV;
 import static com.jogamp.opengl.GL2GL3.GL_ELEMENT_ARRAY_UNIFIED_NV;
 import static com.jogamp.opengl.GL2GL3.GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV;
@@ -66,10 +69,10 @@ public class Mesh {
     private long[] indexBufferGPUPtr = {0};      // GPU pointer to m_indexBuffer data
 
     public static boolean enableVBUM = false;
-    public static boolean setVertexFormatOnEveryDrawCall = true;
+    public static boolean setVertexFormatOnEveryDrawCall = false;
     public static boolean useHeavyVertexFormat = false;
-    public static final boolean useDirectStateAccess = false;
-    public static int drawCallsPerState = 1;
+    public static int drawCallsPerState = 1;    
+    public static final boolean useDSA = false;
     public static int[] vao = {0};
 
     public Mesh() {
@@ -90,21 +93,11 @@ public class Mesh {
     public void update(GL4 gl4, Vertex[] vertices, short[] indices) {
 
         if (vertexCount == 0) {
-            if (useDirectStateAccess) {
-                gl4.glCreateBuffers(1, vertexBuffer, 0);
-            } else {
-                gl4.glGenBuffers(1, vertexBuffer, 0);
-            }
-//            System.out.println("vertexBuffer "+vertexBuffer[0]);
+            gl4.glCreateBuffers(1, vertexBuffer, 0);
         }
 
         if (indexCount == 0) {
-            if (useDirectStateAccess) {
-                gl4.glCreateBuffers(1, indexBuffer, 0);
-            } else {
-                gl4.glGenBuffers(1, indexBuffer, 0);
-            }
-//            System.out.println("indexBuffer "+indexBuffer[0]);
+            gl4.glCreateBuffers(1, indexBuffer, 0);
         }
 
         // Stick the data for the vertices and indices in their respective buffers
@@ -113,7 +106,7 @@ public class Mesh {
             verticesBuffer.put(vertex.toByteBuffer());
         }
         verticesBuffer.rewind();
-        if (useDirectStateAccess) {
+        if (useDSA) {
             gl4.glNamedBufferData(vertexBuffer[0], verticesBuffer.capacity() * Byte.BYTES, verticesBuffer, GL_STATIC_DRAW);
         } else {
             gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer[0]);
@@ -122,7 +115,7 @@ public class Mesh {
         }
 
         Buffer indicesBuffer = GLBuffers.newDirectShortBuffer(indices).rewind();
-        if (useDirectStateAccess) {
+        if (useDSA) {
             gl4.glNamedBufferData(indexBuffer[0], indices.length * Short.BYTES, indicesBuffer, GL_STATIC_DRAW);
         } else {
             gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer[0]);
@@ -148,65 +141,6 @@ public class Mesh {
 //
         vertexCount = vertices.length;
         indexCount = indices.length;
-
-//        if (useDirectStateAccess) {
-//            int bindingIndex = 0;
-//            /**
-//             * Set up attributes and enable them.
-//             */
-//            gl4.glVertexArrayAttribBinding(vao[0], Semantic.Attr.POSITION, bindingIndex);
-//            gl4.glVertexArrayAttribFormat(vao[0], Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex.PositionOffset);
-//            gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.POSITION);
-//
-//            gl4.glVertexArrayAttribBinding(vao[0], Semantic.Attr.COLOR, bindingIndex);
-//            gl4.glVertexArrayAttribFormat(vao[0], Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true, Vertex.ColorOffset);
-//            gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.COLOR);
-//
-//            gl4.glVertexArrayVertexBuffer(vao[0], bindingIndex, vertexArray[0], 0, Vertex.SIZEOF);
-//            gl4.glVertexArrayElementBuffer(vao[0], indexArray[0]);
-//
-//            // Set up a bunch of other attributes if we're using the heavy vertex format option
-//            if (useHeavyVertexFormat) {
-//
-//                gl4.glVertexArrayAttribBinding(vao[0], Semantic.Attr.ATTR3, bindingIndex);
-//                gl4.glVertexArrayAttribFormat(vao[0], Semantic.Attr.ATTR3, 4, GL_FLOAT, false, Vertex.Attrib1Offset);
-//                gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR3);
-//
-//                gl4.glVertexArrayAttribBinding(vao[0], Semantic.Attr.ATTR4, bindingIndex);
-//                gl4.glVertexArrayAttribFormat(vao[0], Semantic.Attr.ATTR4, 4, GL_FLOAT, false, Vertex.Attrib2Offset);
-//                gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR4);
-//
-//                gl4.glVertexArrayAttribBinding(vao[0], Semantic.Attr.ATTR5, bindingIndex);
-//                gl4.glVertexArrayAttribFormat(vao[0], Semantic.Attr.ATTR5, 4, GL_FLOAT, false, Vertex.Attrib3Offset);
-//                gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR5);
-//
-//                gl4.glVertexArrayAttribBinding(vao[0], Semantic.Attr.ATTR6, bindingIndex);
-//                gl4.glVertexArrayAttribFormat(vao[0], Semantic.Attr.ATTR6, 4, GL_FLOAT, false, Vertex.Attrib4Offset);
-//                gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR6);
-//
-//                gl4.glVertexArrayAttribBinding(vao[0], Semantic.Attr.ATTR7, bindingIndex);
-//                gl4.glVertexArrayAttribFormat(vao[0], Semantic.Attr.ATTR7, 4, GL_FLOAT, false, Vertex.Attrib5Offset);
-//                gl4.glEnableVertexArrayAttrib(vao[0], Semantic.Attr.ATTR7);
-//            }
-//        } else {
-//
-//            gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexArray[0]);
-//            {
-//                gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 3, GL_FLOAT, false,
-//                        Vertex.SIZEOF, Vertex.PositionOffset);
-//                gl4.glVertexAttribPointer(Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true,
-//                        Vertex.SIZEOF, Vertex.ColorOffset);
-//
-////                    if (useHeavyVertexFormat) {
-////
-////                        gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 3, GL_FLOAT, false,
-////                                Vertex.SIZEOF, Vertex.PositionOffset);
-////                        gl4.glVertexAttribPointer(Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true,
-////                                Vertex.SIZEOF, Vertex.ColorOffset);
-////                    }
-//            }
-//            gl4.glBindBuffer(GL_ARRAY_BUFFER, 0);
-//        }
     }
 
     /**
@@ -215,7 +149,7 @@ public class Mesh {
      * @param gl4
      */
     public static void renderPrep(GL4 gl4) {
-        
+
         if (enableVBUM) {
 
             // Specify the vertex format
@@ -249,7 +183,7 @@ public class Mesh {
             // Enable Vertex Buffer Unified Memory (VBUM) for the indices
             gl4.glEnableClientState(GL_ELEMENT_ARRAY_UNIFIED_NV);
 
-        } else if (useDirectStateAccess) {
+        } else if (useDSA) {
             // Set up attribute 0 for the position (3 floats)
             gl4.glVertexArrayAttribFormat(vao[0], Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex.PositionOffset);
 
@@ -355,7 +289,7 @@ public class Mesh {
             //
             ////////////////////////////////////////////////////////////////////////////////
 
-            if (useDirectStateAccess) {
+            if (useDSA) {
                 // TODO
             } else {
                 gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer[0]);
@@ -383,7 +317,7 @@ public class Mesh {
      * @param gl4
      */
     public static void renderFinish(GL4 gl4) {
-        
+
         if (enableVBUM) {
 
             // Reset state
@@ -404,7 +338,7 @@ public class Mesh {
             gl4.glDisableClientState(GL_VERTEX_ATTRIB_ARRAY_UNIFIED_NV);
             gl4.glDisableClientState(GL_ELEMENT_ARRAY_UNIFIED_NV);
 
-        } else if (useDirectStateAccess) {
+        } else if (useDSA) {
             // Rendering with Vertex Array Objects (VAO)
             // Reset state
             gl4.glDisableVertexArrayAttrib(vao[0], Semantic.Attr.POSITION);

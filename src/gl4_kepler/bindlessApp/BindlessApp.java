@@ -68,7 +68,7 @@ public class BindlessApp extends NvSampleApp {
 
     // UI stuff
 //    NvUIValueText*                m_drawCallsPerSecondText;
-    private boolean useBindlessUniforms = false;
+    private boolean useBindlessUniforms = true;
     private boolean updateUniformsEveryFrame = true;
     private boolean usePerMeshUniforms = true;
 
@@ -441,15 +441,16 @@ public class BindlessApp extends NvSampleApp {
             if (usePerMeshUniforms) {
 
                 if (useBindlessUniforms) {
-                    long perMeshUniformsGPUPtr_;
+                    
+                    long perMeshUniformsGPUPtr_i_th;
 
                     // *** INTERESTING ***
                     // Compute a GPU pointer for the per mesh uniforms for this mesh
-                    perMeshUniformsGPUPtr_ = perMeshUniformsGPUPtr[0] + PerMeshUniforms.SIZEOF * i;
+                    perMeshUniformsGPUPtr_i_th = perMeshUniformsGPUPtr[0] + PerMeshUniforms.SIZEOF * i;
                     // Pass a GPU pointer to the vertex shader for the per mesh uniform data via a vertex attribute
                     gl4.glVertexAttribI2i(bindlessPerMeshUniformsPtrAttribLocation,
-                            (int) (perMeshUniformsGPUPtr_ & 0xFFFFFFFF),
-                            (int) ((perMeshUniformsGPUPtr_ >> 32) & 0xFFFFFFFF));
+                            (int) (perMeshUniformsGPUPtr_i_th & 0xFFFFFFFF),
+                            (int) ((perMeshUniformsGPUPtr_i_th >> 32) & 0xFFFFFFFF));
 
                 } else {
 
