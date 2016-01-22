@@ -67,48 +67,19 @@ public class Vertex {
     public ByteBuffer toByteBuffer() {
         ByteBuffer result = GLBuffers.newDirectByteBuffer(SIZEOF);
         for (int i = 0; i < 4; i++) {
-//            if (i < 3) {
-//                result.putFloat(i * Float.BYTES, position[i]);
-//            } 
-//        else {
-//                for (int j = 0; j < 4; j++) {
-//                    result.put(ColorOffset + i, color[i]);
-//                }
-//            }
-//            result.putFloat(Attrib0Offset + i * Float.BYTES, attrib0[i]);
-//            result.putFloat(Attrib1Offset + i * Float.BYTES, attrib1[i]);
-//            result.putFloat(Attrib2Offset + i * Float.BYTES, attrib2[i]);
-//            result.putFloat(Attrib3Offset + i * Float.BYTES, attrib3[i]);
-//            result.putFloat(Attrib4Offset + i * Float.BYTES, attrib4[i]);
-//            result.putFloat(Attrib5Offset + i * Float.BYTES, attrib5[i]);
-//            result.putFloat(Attrib6Offset + i * Float.BYTES, attrib6[i]);
+            if (i < 3) {
+                result.putFloat(PositionOffset + i * Float.BYTES, position[i]);
+            }
+            result.put(ColorOffset + i * Byte.BYTES, color[i]);
+            result.putFloat(Attrib0Offset + i * Float.BYTES, attrib0[i]);
+            result.putFloat(Attrib1Offset + i * Float.BYTES, attrib1[i]);
+            result.putFloat(Attrib2Offset + i * Float.BYTES, attrib2[i]);
+            result.putFloat(Attrib3Offset + i * Float.BYTES, attrib3[i]);
+            result.putFloat(Attrib4Offset + i * Float.BYTES, attrib4[i]);
+            result.putFloat(Attrib5Offset + i * Float.BYTES, attrib5[i]);
+            result.putFloat(Attrib6Offset + i * Float.BYTES, attrib6[i]);
         }
-        result.putFloat(position[0]);
-        result.putFloat(position[1]);
-        result.putFloat(position[2]);
-        result.put(color[0]);
-        result.put(color[1]);
-        result.put(color[2]);
-        result.put(color[3]);
         result.rewind();
-        return result;
-    }
-    
-    public float[] toFloatArray() {
-
-        float[] result = new float[3 + 1 + 4 * 7];
-
-        System.arraycopy(position, 0, result, 0, position.length);
-        result[3] = (color[3] & 0xff) << 24 | (color[2] & 0xff) << 16
-                | (color[1] & 0xff) << 8 | (color[0] & 0xff);
-        System.arraycopy(attrib0, 0, result, 4 + 4 * 0, attrib0.length);
-        System.arraycopy(attrib1, 0, result, 4 + 4 * 1, attrib1.length);
-        System.arraycopy(attrib2, 0, result, 4 + 4 * 2, attrib2.length);
-        System.arraycopy(attrib3, 0, result, 4 + 4 * 3, attrib3.length);
-        System.arraycopy(attrib4, 0, result, 4 + 4 * 4, attrib4.length);
-        System.arraycopy(attrib5, 0, result, 4 + 4 * 5, attrib5.length);
-        System.arraycopy(attrib6, 0, result, 4 + 4 * 6, attrib6.length);
-
         return result;
     }
 
@@ -117,13 +88,14 @@ public class Vertex {
 //        return "position: (" + position[0] + ", " + position[1] + ", " + position[2] + ") color: ("
 //                + color[0] + ", " + color[1] + ", " + color[2] + ", " + color[3] + ")";
 //    }
+
     public static final int PositionOffset = 0;
     public static final int ColorOffset = 3 * Float.BYTES; // 12
     public static final int Attrib0Offset = 3 * Float.BYTES + 4 * Byte.BYTES; // 16
     public static final int Attrib1Offset = (3 + 4 * 1) * Float.BYTES + 4 * Byte.BYTES; // 32
     public static final int Attrib2Offset = (3 + 4 * 2) * Float.BYTES + 4 * Byte.BYTES; // 48
     public static final int Attrib3Offset = (3 + 4 * 3) * Float.BYTES + 4 * Byte.BYTES; // 64
-    public static final int Attrib4Offset = (3 + 4 * 4) * Float.BYTES + 4 * Byte.BYTES; // 72
+    public static final int Attrib4Offset = (3 + 4 * 4) * Float.BYTES + 4 * Byte.BYTES; // 80
     public static final int Attrib5Offset = (3 + 4 * 5) * Float.BYTES + 4 * Byte.BYTES; // 96
     public static final int Attrib6Offset = (3 + 4 * 6) * Float.BYTES + 4 * Byte.BYTES; // 112
     public static final int SIZEOF = (3 + 4 * 7) * Float.BYTES + 4 * Byte.BYTES; // 128

@@ -46,6 +46,7 @@ public abstract class ProgramEntry {
         glWindow.setFullscreen(fullscreen);
         glWindow.setPointerVisible(mouseVisible);
         glWindow.confinePointer(mouseConfined);
+        glWindow.setResizable(true);
 
         app = nvAppFactory(defaultWidth, defaultHeight);
         glWindow.addGLEventListener(app);

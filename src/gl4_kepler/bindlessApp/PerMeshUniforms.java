@@ -43,8 +43,19 @@ public class PerMeshUniforms {
 
     public static final int COUNT = 6;
     public static final int SIZEOF = COUNT * Float.BYTES;
+    private float[] fa;
+
+    public PerMeshUniforms() {
+        fa = new float[6];
+    }
 
     public float[] toFloatArray() {
-        return new float[]{r, g, b, a, u, v};
+        fa[0] = r;
+        fa[1] = g;
+        fa[2] = b;
+        fa[3] = a;
+        fa[4] = u;
+        fa[5] = v;
+        return fa;
     }
 }
