@@ -37,7 +37,7 @@ import nvAppBase.ProgramEntry;
  */
 public class BindlessApp extends NvSampleApp {
 
-    private final int SQRT_BUILDING_COUNT = 100;
+    private final int SQRT_BUILDING_COUNT = 50;
 
     // Simple collection of meshes to render
     private Mesh[] meshes;

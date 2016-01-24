@@ -5,6 +5,9 @@
  */
 package gl4_kepler.bindlessApp;
 
+import com.jogamp.opengl.test.junit.jogl.acore.TestGLDebug00NEWT;
+import com.jogamp.opengl.test.junit.jogl.demos.es1.newt.TestGearsES1NEWT;
+import com.jogamp.opengl.test.junit.jogl.demos.es1.newt.TestOlympicES1NEWT;
 import nvAppBase.NvAppBase;
 
 /**
@@ -15,7 +18,9 @@ public class Main extends nvAppBase.ProgramEntry {
 
     public static void main(String[] args) {
 
-        new Main(args);
+//        new Main(args);
+
+    new TestGLDebug00NEWT();
     }
 
     public Main(String[] args) {
