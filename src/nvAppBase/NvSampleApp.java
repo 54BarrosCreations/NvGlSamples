@@ -164,6 +164,9 @@ public abstract class NvSampleApp extends NvAppBase {
         GL4 gl4 = drawable.getGL().getGL4();
         
         baseShutdownRendering(gl4);
+        
+        ProgramEntry.animator.stop();
+        System.exit(0);
     }
     
     private void baseShutdownRendering(GL4 gl4) {

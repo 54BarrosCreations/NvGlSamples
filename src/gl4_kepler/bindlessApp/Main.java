@@ -18,9 +18,7 @@ public class Main extends nvAppBase.ProgramEntry {
 
     public static void main(String[] args) {
 
-//        new Main(args);
-
-    new TestGLDebug00NEWT();
+        new Main(args);
     }
 
     public Main(String[] args) {

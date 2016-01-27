@@ -19,7 +19,9 @@ public class TestGLDebug01NEWT {
     public static void main(final String args[]) throws IOException, InterruptedException {
         TestGLDebug01NEWT t = new TestGLDebug01NEWT();
 
-        t.test01GL2GL3DebugDisabled();
+//        t.test01GL2GL3DebugDisabled();
+//        t.test02GL2GL3DebugEnabled();
+        t.test03GL2GL3DebugError();
     }
 
     public void test01GL2GL3DebugDisabled() throws InterruptedException {
