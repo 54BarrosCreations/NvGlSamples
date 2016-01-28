@@ -33,11 +33,9 @@
 //----------------------------------------------------------------------------------
 package nvAppBase;
 
-import com.jogamp.opengl.math.FloatUtil;
-import gl4_kepler.bindlessApp.Transform;
-import jglm.Jglm;
+import com.jogamp.newt.event.MouseEvent;
+import com.jogamp.newt.event.MouseListener;
 import jglm.Mat4;
-import nvAppBase.NvCameraXformType;
 import jglm.Vec3;
 import jglm.Vec4;
 
@@ -45,7 +43,7 @@ import jglm.Vec4;
  *
  * @author GBarbieri
  */
-public class NvInputTransformer {
+public class NvInputTransformer implements MouseListener {
 
     private Transform[] xforms = new Transform[NvCameraXformType.COUNT.ordinal()];
     private int width;
@@ -56,6 +54,9 @@ public class NvInputTransformer {
     private int zVel_mouse = 0;
     private float xVel_gp = 0;
     private float zVel_gp = 0;
+    private boolean touchDown = false;
+    private int maxPointsCount = 0;
+    private ControlMode mode = ControlMode.TRANSLATE;
 
     public NvInputTransformer() {
 
@@ -128,7 +129,7 @@ public class NvInputTransformer {
     public void setTranslationVec(Vec3 vec) {
         xforms[NvCameraXformType.MAIN.ordinal()].translate = vec;
     }
-    
+
     public void setScreenSize(int width, int height) {
         this.width = width;
         this.height = height;
@@ -141,5 +142,105 @@ public class NvInputTransformer {
         } else {
             return xf.translateMat.mult(xf.rotateMat.mult(xf.scaleMat));
         }
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        Transform xfm = xforms[NvCameraXformType.MAIN.ordinal()];
+        touchDown = true;
+        maxPointsCount = 1;
+        xfm.dScale = 1.0f; // for sanity reset to 1.
+
+        if (motionMode == NvCameraMotionType.PAN_ZOOM) {
+            mode = ControlMode.TRANSLATE;
+        } else {
+            mode = ControlMode.ROTATE;
+        }
+        if (motionMode != NvCameraMotionType.FIRST_PERSON) {
+            if (motionMode == NvCameraMotionType.ORBITAL) {
+                if (e.getButton() == MouseEvent.BUTTON2) {
+                    mode = ControlMode.ZOOM;
+                } else if (e.getButton() == MouseEvent.BUTTON3) {
+                    mode = ControlMode.TRANSLATE;
+                }
+            } else if (motionMode == NvCameraMotionType.DUAL_ORBITAL) {
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    mode = ControlMode.ROTATE;
+                } else if (e.getButton() == MouseEvent.BUTTON3) {
+                    mode = ControlMode.SECONDARY_ROTATE;
+                }
+            } else if (e.getButton() == MouseEvent.BUTTON3) { // PAN_ZOOM
+                mode = ControlMode.ZOOM;
+            }
+        }
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        Transform xfm = xforms[NvCameraXformType.MAIN.ordinal()];
+        touchDown = false;
+        maxPointsCount = 0;
+        // lock in scaling
+        if (motionMode != NvCameraMotionType.FIRST_PERSON) {
+            xfm.scale = nvClampScale(xfm.scale * xfm.dScale);
+            xfm.dScale = 1.0f;
+        }
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseEvent e) {
+    }
+
+    private enum NvCameraMotionType {
+        ORBITAL, ///< Camera orbits the world origin
+        FIRST_PERSON, ///< Camera moves as in a 3D, first-person shooter
+        PAN_ZOOM, ///< Camera pans and zooms in 2D
+        DUAL_ORBITAL  ///< Two independent orbital transforms
+    }
+
+    private enum NvCameraXformType {
+        MAIN, ///< Default transform
+        SECONDARY, ///< Secondary transform
+        COUNT ///< Number of transforms
+    }
+
+    private enum ControlMode {
+        TRANSLATE, ROTATE, SECONDARY_ROTATE, ZOOM
+    }
+
+    private class Transform {
+
+        public Vec3 translateVel;
+        public Vec3 rotateVel;
+        public float maxRotationVel;
+        public float maxTranslationVel;
+
+        public Vec3 translate;
+        public Vec3 rotate;
+        public float scale, dScale;
+
+        public Mat4 translateMat;
+        public Mat4 rotateMat;
+        public Mat4 scaleMat;
     }
 }

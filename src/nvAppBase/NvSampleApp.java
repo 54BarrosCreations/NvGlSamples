@@ -37,6 +37,8 @@ public abstract class NvSampleApp extends NvAppBase {
 
         transformer = new NvInputTransformer();
 
+        ProgramEntry.glWindow.addMouseListener(transformer);
+        
         frameTimer = new NvStopWatch();
 
         drawTimer = new NvStopWatch();
