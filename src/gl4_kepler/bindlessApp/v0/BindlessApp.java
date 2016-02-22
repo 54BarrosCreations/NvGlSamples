@@ -354,7 +354,7 @@ public class BindlessApp extends NvSampleApp {
         modelviewMatrix = transformer.getModelViewMat();
         transform.modelView = modelviewMatrix;
         transform.modelViewProjection = projectionMatrix.mul_(modelviewMatrix);
-        transform.useBindlessUniforms = useBindlessUniforms ? 1 : 0;
+        
         gl4.glBindBufferBase(GL_UNIFORM_BUFFER, 2, transformName.get(0));
         if (!usePools) {
             transformBuffer = GLBuffers.newDirectByteBuffer(Transform.SIZE);
@@ -379,16 +379,7 @@ public class BindlessApp extends NvSampleApp {
             dt = Math.min(0.00005f / minimumFrameDeltaTime, .01f);
             t += dt * Mesh.drawCallsPerState;
 
-            updatePerMeshUniforms(gl4, t);
-        }
-
-        // Set up default per mesh uniforms. These may be changed on a per mesh basis in the rendering loop below 
-        if (useBindlessUniforms) {
-            // *** INTERESTING ***
-            // Pass a GPU pointer to the vertex shader for the per mesh uniform data via a vertex attribute
-            gl4.glVertexAttribI2i(bindlessPerMeshUniformsPtrAttribLocation,
-                    (int) (perMeshUniformsGPUPtr[0] & 0xFFFFFFFF),
-                    (int) ((perMeshUniformsGPUPtr[0] >> 32) & 0xFFFFFFFF));
+            updatePerMeshUniforms(t);
         }
 
         // If all of the meshes are sharing the same vertex format, we can just set the vertex format once

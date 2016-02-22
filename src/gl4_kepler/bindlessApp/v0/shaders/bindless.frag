@@ -35,19 +35,18 @@
 #extension GL_NV_bindless_texture : require
 #extension GL_NV_gpu_shader5 : require // uint64_t
 
-layout(location=0) smooth in vec4  iColor;
-layout(location=1) flat in vec2  iUV;
-layout(location=0) out vec4 fragColor;
-uniform uint64_t samplers[256];
-uniform int useBindless;
-uniform int currentFrame;
+layout smooth in vec4 inColor;
+layout flat in vec2 inUV;
+
+layout out vec4 fragColor;
+
+uniform sampler2D texture_;
+uniform int useTextures;
 
 void main() {
 
-    sampler2D s = sampler2D(samplers[currentFrame]);
-
     if (useBindless > 0) 
-        fragColor = texture2D(s, iUV);
+        fragColor = texture(texture_, inUV);
     else 
-        fragColor = iColor;
+        fragColor = inColor;
 }

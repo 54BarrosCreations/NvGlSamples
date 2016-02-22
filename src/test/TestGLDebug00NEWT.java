@@ -11,8 +11,6 @@ import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2ES2;
 import com.jogamp.opengl.GLCapabilities;
 import com.jogamp.opengl.GLContext;
-import com.jogamp.opengl.GLDebugListener;
-import com.jogamp.opengl.GLDebugMessage;
 import com.jogamp.opengl.GLDrawable;
 import com.jogamp.opengl.GLDrawableFactory;
 import com.jogamp.opengl.GLProfile;
@@ -21,7 +19,6 @@ import com.jogamp.newt.Display;
 import com.jogamp.newt.NewtFactory;
 import com.jogamp.newt.Screen;
 import com.jogamp.newt.Window;
-import com.jogamp.opengl.test.junit.util.UITestCase;
 
 public class TestGLDebug00NEWT {
 

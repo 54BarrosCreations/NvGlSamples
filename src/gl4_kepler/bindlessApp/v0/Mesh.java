@@ -33,28 +33,18 @@
 //----------------------------------------------------------------------------------
 package gl4_kepler.bindlessApp.v0;
 
-import com.jogamp.opengl.GL;
 import gl4_kepler.bindlessApp.*;
 import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
-import static com.jogamp.opengl.GL.GL_BUFFER_SIZE;
 import static com.jogamp.opengl.GL.GL_ELEMENT_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_FLOAT;
 import static com.jogamp.opengl.GL.GL_STATIC_DRAW;
 import static com.jogamp.opengl.GL.GL_TRIANGLES;
 import static com.jogamp.opengl.GL.GL_UNSIGNED_BYTE;
 import static com.jogamp.opengl.GL.GL_UNSIGNED_SHORT;
-import static com.jogamp.opengl.GL2ES3.GL_READ_ONLY;
-import static com.jogamp.opengl.GL2GL3.GL_BUFFER_GPU_ADDRESS_NV;
-import static com.jogamp.opengl.GL2GL3.GL_ELEMENT_ARRAY_ADDRESS_NV;
-import static com.jogamp.opengl.GL2GL3.GL_ELEMENT_ARRAY_UNIFIED_NV;
-import static com.jogamp.opengl.GL2GL3.GL_VERTEX_ATTRIB_ARRAY_ADDRESS_NV;
-import static com.jogamp.opengl.GL2GL3.GL_VERTEX_ATTRIB_ARRAY_UNIFIED_NV;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.LongBuffer;
 import java.nio.ShortBuffer;
 import nvAppBase.Semantic;
 
@@ -72,6 +62,9 @@ public class Mesh {
     }
 
     private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);    // vertex buffer object
+    private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1);
+    public static boolean useVertexArray = false;
+    public static boolean setVertexFormatOnEveryDrawCall = true;
     public static boolean useHeavyVertexFormat = false;
     public static int drawCallsPerState = 1;
     private int elementCount;
@@ -81,10 +74,11 @@ public class Mesh {
 
     /**
      * This method is called to update the vertex and index data for the mesh.
-     * For GL_NV_vertex_buffer_unified_memory (VBUM), we ask the driver to give us
-     * GPU pointers for the buffers. Later, when we render, we use these GPU pointers
-     * directly. By using GPU pointers, the driver can avoid many system memory
-     * accesses which pollute the CPU caches and reduce performance.
+     * For GL_NV_vertex_buffer_unified_memory (VBUM), we ask the driver to give
+     * us GPU pointers for the buffers. Later, when we render, we use these GPU
+     * pointers directly. By using GPU pointers, the driver can avoid many
+     * system memory accesses which pollute the CPU caches and reduce
+     * performance.
      *
      * @param gl4
      * @param vertices
@@ -111,14 +105,35 @@ public class Mesh {
         gl4.glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementBuffer.capacity() * Short.BYTES, elementBuffer,
                 GL_STATIC_DRAW);
         gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        if (useVertexArray) {
+            gl4.glGenVertexArrays(1, vertexArrayName);
+            gl4.glBindVertexArray(vertexArrayName.get(0));
+            {
+                setVertexAttributes(gl4);
+            }
+            gl4.glBindVertexArray(0);
+        }
     }
 
     /**
-     * Does the actual rendering of the mesh.
+     * Sets up the vertex format state.
      *
      * @param gl4
      */
-    public void render(GL4 gl4) {
+    public void renderPrep(GL4 gl4) {
+
+        if (useVertexArray) {
+
+            gl4.glBindVertexArray(vertexArrayName.get(0));
+
+        } else {
+
+            setVertexAttributes(gl4);
+        }
+    }
+
+    private void setVertexAttributes(GL4 gl4) {
 
         gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
         {
@@ -156,6 +171,14 @@ public class Mesh {
         }
 
         gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
+    }
+
+    /**
+     * Does the actual rendering of the mesh.
+     *
+     * @param gl4
+     */
+    public void render(GL4 gl4) {
 
         // Do the actual drawing
         for (int i = 0; i < drawCallsPerState; i++) {
@@ -168,7 +191,7 @@ public class Mesh {
      *
      * @param gl4
      */
-    public static void renderFinish(GL4 gl4) {
+    public void renderFinish(GL4 gl4) {
 
         gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
         gl4.glDisableVertexAttribArray(Semantic.Attr.COLOR);
