@@ -5,8 +5,7 @@
  */
 package nvAppBase;
 
-import jglm.Mat4;
-import jglm.Vec4;
+import glm.mat._4.Mat4;
 
 /**
  *
@@ -14,21 +13,21 @@ import jglm.Vec4;
  */
 public class NvMatrix {
 
-    public static Mat4 rotationYawPitchRoll(float yaw, float pitch, float roll) {
+    public static Mat4 rotationYawPitchRoll(Mat4 m, float yaw, float pitch, float roll) {
 
-        Mat4 m = new Mat4(1);
+        m.identity();
 
         if (roll != 0) {
 
-            m = Mat4.rotationZ(roll);
+            m.rotationZ(roll);
         }
         if (pitch != 0) {
 
-            m = m.mult(Mat4.rotationX(pitch));
+            m.rotateX(pitch);
         }
         if (yaw != 0) {
 
-            m = m.mult(Mat4.rotationY(yaw));
+            m.rotateY(yaw);
         }
         return m;
     }

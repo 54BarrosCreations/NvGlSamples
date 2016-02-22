@@ -43,7 +43,11 @@ uniform int useBindless;
 uniform int currentFrame;
 
 void main() {
+
     sampler2D s = sampler2D(samplers[currentFrame]);
-    if (useBindless>0) fragColor = texture2D(s, iUV);
-    else fragColor = iColor;
+
+    if (useBindless > 0) 
+        fragColor = texture2D(s, iUV);
+    else 
+        fragColor = iColor;
 }

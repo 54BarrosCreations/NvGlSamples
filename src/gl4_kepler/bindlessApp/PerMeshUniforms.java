@@ -42,7 +42,7 @@ public class PerMeshUniforms {
     public float r, g, b, a, u, v;
 
     public static final int COUNT = 6;
-    public static final int SIZEOF = COUNT * Float.BYTES;
+    public static final int SIZE = COUNT * Float.BYTES;
     private float[] fa;
 
     public PerMeshUniforms() {

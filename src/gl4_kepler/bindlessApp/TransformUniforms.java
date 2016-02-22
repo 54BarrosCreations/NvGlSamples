@@ -5,8 +5,7 @@
  */
 package gl4_kepler.bindlessApp;
 
-import jglm.Mat4;
-import jglm.Vec4;
+import glm.mat._4.Mat4;
 
 /**
  *
@@ -18,7 +17,6 @@ public class TransformUniforms {
     public Mat4 modelViewProjection = new Mat4();
     public int useBindlessUniforms;
 
-    public static final int SIZEOF = 16 * 2 * Float.BYTES + Integer.BYTES;
-    public static final int COUNT = 16 * 2 + 1;
-    public static final int USEBINDLESSUNIFORM_OFFSET = 16 * 2 * Float.BYTES;
+    public static final int SIZE = 2 * Mat4.SIZE + Integer.BYTES;
+    public static final int USEBINDLESSUNIFORM_OFFSET = 2 * Mat4.SIZE;
 }

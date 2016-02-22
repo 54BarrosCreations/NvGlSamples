@@ -35,9 +35,11 @@ package nvAppBase;
 
 import com.jogamp.newt.event.MouseEvent;
 import com.jogamp.newt.event.MouseListener;
-import jglm.Mat4;
-import jglm.Vec3;
-import jglm.Vec4;
+import glm.glm;
+import glm.mat._4.Mat4;
+import glm.vec._2.Vec2;
+import glm.vec._3.Vec3;
+import glm.vec._4.Vec4;
 
 /**
  *
@@ -45,10 +47,10 @@ import jglm.Vec4;
  */
 public class NvInputTransformer implements MouseListener {
 
-    private Transform[] xforms = new Transform[NvCameraXformType.COUNT.ordinal()];
+    private Transform[] xforms = new Transform[NvCameraXformType.COUNT];
     private int width;
     private int height;
-    private NvCameraMotionType motionMode = NvCameraMotionType.ORBITAL;
+    private int motionMode = NvCameraMotionType.ORBITAL;
     private int xVel_kb = 0;
     private int zVel_kb = 0;
     private int zVel_mouse = 0;
@@ -56,92 +58,68 @@ public class NvInputTransformer implements MouseListener {
     private float zVel_gp = 0;
     private boolean touchDown = false;
     private int maxPointsCount = 0;
-    private ControlMode mode = ControlMode.TRANSLATE;
+    private int mode = ControlMode.TRANSLATE;
+    private Vec2 lastInput = new Vec2();
+    private Vec2 firstInput = new Vec2();
 
     public NvInputTransformer() {
 
         for (int i = 0; i < xforms.length; i++) {
             xforms[i] = new Transform();
-            xforms[i].translateVel = new Vec3(0.0f, 0.0f, 0.0f);
-            xforms[i].rotateVel = new Vec3(0.0f, 0.0f, 0.0f);
-            xforms[i].translate = new Vec3(0.0f, 0.0f, 0.0f);
-            xforms[i].rotate = new Vec3(0.0f, 0.0f, 0.0f);
+            xforms[i].translateVel = new Vec3();
+            xforms[i].rotateVel = new Vec3();
+            xforms[i].translate = new Vec3();
+            xforms[i].rotate = new Vec3();
             xforms[i].scale = 1.0f;
-            xforms[i].dScale = 1.0f;
+            xforms[i].scaleD = 1.0f;
             xforms[i].maxRotationVel = (float) Math.PI;
             xforms[i].maxTranslationVel = 5.0f;
         }
     }
 
     public void update(float deltaTime) {
-
         if (motionMode == NvCameraMotionType.DUAL_ORBITAL) {
-            Transform xfm = xforms[NvCameraXformType.MAIN.ordinal()];
-            Transform xfs = xforms[NvCameraXformType.SECONDARY.ordinal()];
-            xfm.rotate.plus(xfm.rotateVel.times(deltaTime));
-            xfs.rotate.plus(xfs.rotateVel.times(deltaTime));
-            xfm.translate.plus(xfm.translateVel.times(deltaTime));
+            Transform xfm = xforms[NvCameraXformType.MAIN];
+            Transform xfs = xforms[NvCameraXformType.SECONDARY];
+            xfm.rotate.add(xfm.rotateVel.mul(deltaTime));
+            xfs.rotate.add(xfs.rotateVel.mul(deltaTime));
+            xfm.translate.add(xfm.translateVel.mul(deltaTime));
+
             updateMats(NvCameraXformType.MAIN);
             updateMats(NvCameraXformType.SECONDARY);
         } else {
-            Transform xf = xforms[NvCameraXformType.MAIN.ordinal()];
-            xf.rotate = xf.rotate.plus(xf.rotateVel.times(deltaTime));
+            Transform xf = xforms[NvCameraXformType.MAIN];
+            xf.rotate = xf.rotate.add(xf.rotateVel.mul(deltaTime));
             Vec3 transVel;
             if (motionMode == NvCameraMotionType.FIRST_PERSON) {
                 // obviously, this should clamp to [-1,1] for the mul, but we don't care for sample use.
                 xf.translateVel.x = xf.maxTranslationVel * (xVel_kb + xVel_gp);
                 xf.translateVel.z = xf.maxTranslationVel * (zVel_mouse + zVel_kb + zVel_gp);
-                transVel = new Vec3(xf.rotateMat.transpose().mult(
+                transVel = new Vec3(glm.transpose_(xf.rotateMat).mul(
                         new Vec4(-xf.translateVel.x, xf.translateVel.y, xf.translateVel.z, 0f)));
             } else {
                 transVel = xf.translateVel;
             }
 
-            xf.translate = xf.translate.plus(transVel.times(deltaTime));
+            xf.translate.add(transVel.mul(deltaTime));
 
             updateMats(NvCameraXformType.MAIN);
         }
     }
 
-    private void updateMats(NvCameraXformType xform) {
+    private void updateMats(int xform) {
 
-        Transform xf = xforms[xform.ordinal()];
-        xf.rotateMat = NvMatrix.rotationYawPitchRoll(xf.rotate.y, xf.rotate.x, 0f);
-        xf.translateMat = Mat4.translate(xf.translate);
-        xf.scaleMat = new Mat4(nvClampScale(xf.scale * xf.dScale));
-        xf.scaleMat.c3.w = 1f;
+        Transform xf = xforms[xform];
+        NvMatrix.rotationYawPitchRoll(xf.rotateMat, xf.rotate.y, xf.rotate.x, 0f);
+        xf.translateMat.translation(xf.translate);
+        xf.scaleMat.identity();
+        xf.scaleMat.scale(nvClampScale(xf.scale * xf.scaleD));
     }
 
     private float nvClampScale(float s) {
         float nvMinScalePct = .035f;
         float nvMaxScalePct = 500f;
         return Math.min(Math.max(s, nvMinScalePct), nvMaxScalePct);
-    }
-
-    public void setRotationVec(Vec3 vec) {
-        setRotationVec(vec, NvCameraXformType.MAIN);
-    }
-
-    public void setRotationVec(Vec3 vec, NvCameraXformType xform) {
-        xforms[xform.ordinal()].rotate = vec;
-    }
-
-    public void setTranslationVec(Vec3 vec) {
-        xforms[NvCameraXformType.MAIN.ordinal()].translate = vec;
-    }
-
-    public void setScreenSize(int width, int height) {
-        this.width = width;
-        this.height = height;
-    }
-
-    public Mat4 getModelViewMat() {
-        Transform xf = xforms[NvCameraXformType.MAIN.ordinal()];
-        if (motionMode == NvCameraMotionType.FIRST_PERSON) {
-            return xf.rotateMat.mult(xf.translateMat.mult(xf.scaleMat));
-        } else {
-            return xf.translateMat.mult(xf.rotateMat.mult(xf.scaleMat));
-        }
     }
 
     @Override
@@ -158,45 +136,12 @@ public class NvInputTransformer implements MouseListener {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        Transform xfm = xforms[NvCameraXformType.MAIN.ordinal()];
-        touchDown = true;
-        maxPointsCount = 1;
-        xfm.dScale = 1.0f; // for sanity reset to 1.
-
-        if (motionMode == NvCameraMotionType.PAN_ZOOM) {
-            mode = ControlMode.TRANSLATE;
-        } else {
-            mode = ControlMode.ROTATE;
-        }
-        if (motionMode != NvCameraMotionType.FIRST_PERSON) {
-            if (motionMode == NvCameraMotionType.ORBITAL) {
-                if (e.getButton() == MouseEvent.BUTTON2) {
-                    mode = ControlMode.ZOOM;
-                } else if (e.getButton() == MouseEvent.BUTTON3) {
-                    mode = ControlMode.TRANSLATE;
-                }
-            } else if (motionMode == NvCameraMotionType.DUAL_ORBITAL) {
-                if (e.getButton() == MouseEvent.BUTTON1) {
-                    mode = ControlMode.ROTATE;
-                } else if (e.getButton() == MouseEvent.BUTTON3) {
-                    mode = ControlMode.SECONDARY_ROTATE;
-                }
-            } else if (e.getButton() == MouseEvent.BUTTON3) { // PAN_ZOOM
-                mode = ControlMode.ZOOM;
-            }
-        }
+        processPoint(e, NvPointerActionType.DOWN);
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        Transform xfm = xforms[NvCameraXformType.MAIN.ordinal()];
-        touchDown = false;
-        maxPointsCount = 0;
-        // lock in scaling
-        if (motionMode != NvCameraMotionType.FIRST_PERSON) {
-            xfm.scale = nvClampScale(xfm.scale * xfm.dScale);
-            xfm.dScale = 1.0f;
-        }
+        processPoint(e, NvPointerActionType.UP);
     }
 
     @Override
@@ -205,27 +150,177 @@ public class NvInputTransformer implements MouseListener {
 
     @Override
     public void mouseDragged(MouseEvent e) {
+        processPoint(e, NvPointerActionType.MOTION);
     }
 
     @Override
     public void mouseWheelMoved(MouseEvent e) {
     }
 
-    private enum NvCameraMotionType {
-        ORBITAL, ///< Camera orbits the world origin
-        FIRST_PERSON, ///< Camera moves as in a 3D, first-person shooter
-        PAN_ZOOM, ///< Camera pans and zooms in 2D
-        DUAL_ORBITAL  ///< Two independent orbital transforms
+    private boolean processPoint(MouseEvent e, int action) {
+
+        Transform xfm = xforms[NvCameraXformType.MAIN];
+        Transform xfs = xforms[NvCameraXformType.SECONDARY];
+        float x = e.getX();
+        float y = e.getY();
+        boolean needsUpdate = false;
+
+        switch (action) {
+            case NvPointerActionType.UP:
+                touchDown = true;
+                maxPointsCount = 1;
+                // lock in scaling
+                if (motionMode != NvCameraMotionType.FIRST_PERSON) {
+                    xfm.scale = nvClampScale(xfm.scale * xfm.scaleD);
+                    xfm.scaleD = 1.0f;
+                }
+                break;
+            case NvPointerActionType.MOTION:
+                if (touchDown) {
+                    if (motionMode == NvCameraMotionType.FIRST_PERSON) {
+                        //...
+                    } else if (maxPointsCount == 1) {
+                        switch (mode) {
+                            case ControlMode.ROTATE:
+                                xfm.rotate.x += ((y - lastInput.y) / height) * xfm.maxRotationVel;
+                                xfm.rotate.y += ((x - lastInput.x) / width) * xfm.maxRotationVel;
+                                needsUpdate = true;
+                                break;
+                            case ControlMode.TRANSLATE:
+                                xfm.translate.x += ((x - lastInput.x) / width) * xfm.maxTranslationVel;
+                                xfm.translate.y -= ((y - lastInput.y) / height) * xfm.maxTranslationVel;
+                                needsUpdate = true;
+                                break;
+                            case ControlMode.ZOOM:
+                                float dy = y - firstInput.y; // negative for moving up, positive moving down.
+                                if (dy > 0) // scale up...
+                                {
+                                    xfm.scaleD = 1.0f + dy / (height / 16.0f);
+                                } else if (dy < 0) { // scale down...
+                                    xfm.scaleD = 1.0f - (-dy / (height / 2));
+                                    xfm.scaleD *= xfm.scaleD; // accelerate the shrink...
+                                }
+                                xfm.scaleD = nvClampScale(xfm.scaleD);
+                                needsUpdate = true;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+                if ((maxPointsCount == 1) || (motionMode == NvCameraMotionType.FIRST_PERSON)
+                        || (motionMode == NvCameraMotionType.DUAL_ORBITAL)) {
+                    lastInput.x = e.getX();
+                    lastInput.y = e.getY();
+                }
+                break;
+
+            default:
+                // down
+                if (action == NvPointerActionType.DOWN) {
+                    touchDown = true;
+                    maxPointsCount = 1;
+                    xfm.scaleD = 1.0f; // for sanity reset to 1.
+
+                    if (motionMode == NvCameraMotionType.PAN_ZOOM) {
+                        mode = ControlMode.TRANSLATE;
+                    } else {
+                        mode = ControlMode.ROTATE;
+                    }
+                    if (motionMode != NvCameraMotionType.FIRST_PERSON) {
+                        if (motionMode == NvCameraMotionType.ORBITAL) {
+                            if (e.getButton() == MouseEvent.BUTTON2) {
+                                mode = ControlMode.ZOOM;
+                            } else if (e.getButton() == MouseEvent.BUTTON3) {
+                                mode = ControlMode.TRANSLATE;
+                            }
+                        } else if (motionMode == NvCameraMotionType.DUAL_ORBITAL) {
+                            if (e.getButton() == MouseEvent.BUTTON1) {
+                                mode = ControlMode.ROTATE;
+                            } else if (e.getButton() == MouseEvent.BUTTON3) {
+                                mode = ControlMode.SECONDARY_ROTATE;
+                            }
+                        } else if (e.getButton() == MouseEvent.BUTTON3) { // PAN_ZOOM
+                            mode = ControlMode.ZOOM;
+                        }
+                    }
+                    firstInput.x = e.getX();
+                    firstInput.y = e.getY();
+                }
+                break;
+        }
+        if ((maxPointsCount == 1) || (motionMode == NvCameraMotionType.FIRST_PERSON)
+                || (motionMode == NvCameraMotionType.DUAL_ORBITAL)) {
+            lastInput.x = e.getX();
+            lastInput.y = e.getY();
+        }
+        return true;
     }
 
-    private enum NvCameraXformType {
-        MAIN, ///< Default transform
-        SECONDARY, ///< Secondary transform
-        COUNT ///< Number of transforms
+    public void setScreenSize(int width, int height) {
+        this.width = width;
+        this.height = height;
     }
 
-    private enum ControlMode {
-        TRANSLATE, ROTATE, SECONDARY_ROTATE, ZOOM
+    public void setRotationVec(Vec3 vec) {
+        setRotationVec(vec, NvCameraXformType.MAIN);
+    }
+
+    public void setRotationVec(Vec3 vec, int xform) {
+        xforms[xform].rotate = vec;
+    }
+
+    public void setTranslationVec(Vec3 vec) {
+        setTranslationVec(vec, NvCameraXformType.MAIN);
+    }
+
+    public void setTranslationVec(Vec3 vec, int xform) {
+        xforms[xform].translate = vec;
+    }
+
+    public Mat4 getModelViewMat() {
+        return getModelViewMat(NvCameraXformType.MAIN);
+    }
+
+    public Mat4 getModelViewMat(int xform) {
+        Transform xf = xforms[xform];
+        if (motionMode == NvCameraMotionType.FIRST_PERSON) {
+            return xf.rotateMat.mul_(xf.translateMat).mul(xf.scaleMat);
+        } else {
+            return xf.translateMat.mul_(xf.rotateMat).mul(xf.scaleMat);
+        }
+    }
+
+    private class NvCameraMotionType {
+
+        public static final int ORBITAL = 0; ///< Camera orbits the world origin
+        public static final int FIRST_PERSON = 1; ///< Camera moves as in a 3D, first-person shooter
+        public static final int PAN_ZOOM = 2; ///< Camera pans and zooms in 2D
+        public static final int DUAL_ORBITAL = 3;  ///< Two independent orbital transforms
+    }
+
+    private class NvCameraXformType {
+
+        public static final int MAIN = 0; ///< Default transform
+        public static final int SECONDARY = 1; ///< Secondary transform
+        public static final int COUNT = 2; ///< Number of transforms
+    }
+
+    private class ControlMode {
+
+        public static final int TRANSLATE = 0;
+        public static final int ROTATE = 1;
+        public static final int SECONDARY_ROTATE = 2;
+        public static final int ZOOM = 3;
+    }
+
+    private class NvPointerActionType {
+
+        public static final int UP = 0; ///< touch or button release
+        public static final int DOWN = 1; ///< touch or button press
+        public static final int MOTION = 2; ///< touch or mouse pointer movement
+        public static final int EXTRA_DOWN = 4; ///< multitouch additional touch press
+        public static final int EXTRA_UP = 8; ///< multitouch additional touch release
     }
 
     private class Transform {
@@ -237,10 +332,10 @@ public class NvInputTransformer implements MouseListener {
 
         public Vec3 translate;
         public Vec3 rotate;
-        public float scale, dScale;
+        public float scale, scaleD;
 
-        public Mat4 translateMat;
-        public Mat4 rotateMat;
-        public Mat4 scaleMat;
+        public Mat4 translateMat = new Mat4();
+        public Mat4 rotateMat = new Mat4();
+        public Mat4 scaleMat = new Mat4();
     }
 }

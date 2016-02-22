@@ -37,7 +37,6 @@
 #extension GL_NV_gpu_shader5 : require // uint64_t
 struct PerMeshUniforms;
 
-
 // Input attributes
 layout(location=0) in vec4             iPos;
 layout(location=1) in vec4             iColor;
@@ -67,53 +66,54 @@ layout(std140, binding=2) uniform TransformParams
 
 struct PerMeshUniforms
 { 
-  float r, g, b, a, u, v;
+    float r, g, b, a, u, v;
 };
 
 layout(std140, binding=3) uniform NonBindlessPerMeshUniforms
 {
-  PerMeshUniforms nonBindlessPerMeshUniforms;
+    PerMeshUniforms nonBindlessPerMeshUniforms;
 };
 
 
 void main() 
 {
-  float r, g, b, u, v;
+    float r, g, b, u, v;
 
-  if(UseBindlessUniforms)
-  {
-    // For bindless uniforms, we pass in a pointer in GPU memory to the uniform data through a vertex attribute.
-    // We use this pointer to load the uniform data.
-    // *** INTERESTING ***
-    r = bindlessPerMeshUniformsPtr->r;
-    g = bindlessPerMeshUniformsPtr->g;
-    b = bindlessPerMeshUniformsPtr->b;
-    u = bindlessPerMeshUniformsPtr->u;
-    v = bindlessPerMeshUniformsPtr->v;
-  }
-  else
-  {
-    // For non-bindless uniforms, we directly used the uniforms
-    r = nonBindlessPerMeshUniforms.r;
-    g = nonBindlessPerMeshUniforms.g;
-    b = nonBindlessPerMeshUniforms.b;
-    u = 0.0;
-    v = 0.0;
-  }
+    if(UseBindlessUniforms)
+    {
+        // For bindless uniforms, we pass in a pointer in GPU memory to the uniform data through a vertex attribute.
+        // We use this pointer to load the uniform data.
+        // *** INTERESTING ***
+        r = bindlessPerMeshUniformsPtr->r;
+        g = bindlessPerMeshUniformsPtr->g;
+        b = bindlessPerMeshUniformsPtr->b;
+        u = bindlessPerMeshUniformsPtr->u;
+        v = bindlessPerMeshUniformsPtr->v;
+    }
+    else
+    {
+        // For non-bindless uniforms, we directly used the uniforms
+        r = nonBindlessPerMeshUniforms.r;
+        g = nonBindlessPerMeshUniforms.g;
+        b = nonBindlessPerMeshUniforms.b;
+        u = 0.0;
+        v = 0.0;
+    }
 
-  vec4 positionModelSpace;
-  positionModelSpace = iPos;
-  if (useBindless>0) {
-      sampler2D s = sampler2D(samplers[currentFrame]);
-     positionModelSpace.y += texture2D(s, vec2(u, v)).g;
-  }
-  else positionModelSpace.y += sin(positionModelSpace.y * r) * .2f;
-  gl_Position = ModelViewProjection * positionModelSpace;
-    
-  oColor.r = iColor.r * r;
-  oColor.g = iColor.g * g;
-  oColor.b = iColor.b * b;
-  oColor.a = iColor.a;
-  oUV.x = u;
-  oUV.y = v;
+    vec4 positionModelSpace = iPos;
+    if (useBindless>0) {
+        sampler2D s = sampler2D(samplers[currentFrame]);
+        positionModelSpace.y += texture2D(s, vec2(u, v)).g;
+    }
+    else 
+        positionModelSpace.y += sin(positionModelSpace.y * r) * .2f;
+
+    gl_Position = ModelViewProjection * positionModelSpace;
+
+    oColor.r = iColor.r * r;
+    oColor.g = iColor.g * g;
+    oColor.b = iColor.b * b;
+    oColor.a = iColor.a;
+    oUV.x = u;
+oUV.y = v;
 }
