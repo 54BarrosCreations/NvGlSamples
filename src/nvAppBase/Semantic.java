@@ -15,11 +15,11 @@ public class Semantic {
 
         public static final int POSITION = 0;
         public static final int COLOR = 1;
-        public static final int ATTR3 = 3;
-        public static final int ATTR4 = 4;
-        public static final int ATTR5 = 5;
-        public static final int ATTR6 = 6;
-        public static final int ATTR7 = 7;
+        public static final int ATTR0 = 2;
+        public static final int ATTR1 = 3;
+        public static final int ATTR2 = 4;
+        public static final int ATTR3 = 5;
+        public static final int ATTR4 = 6;
     }
 
     public static class Frag {

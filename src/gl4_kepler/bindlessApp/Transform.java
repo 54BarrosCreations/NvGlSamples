@@ -11,7 +11,7 @@ import glm.mat._4.Mat4;
  *
  * @author GBarbieri
  */
-public class TransformUniforms {
+public class Transform {
 
     public Mat4 modelView = new Mat4();
     public Mat4 modelViewProjection = new Mat4();

@@ -101,7 +101,7 @@ public class Mesh {
         }
 
         // Stick the data for the vertices and indices in their respective buffers
-        ByteBuffer verticesBuffer = ByteBuffer.allocateDirect(Vertex.SIZEOF * vertices.length);
+        ByteBuffer verticesBuffer = ByteBuffer.allocateDirect(Vertex.SIZE * vertices.length);
         for (Vertex vertex : vertices) {
             verticesBuffer.put(vertex.toByteBuffer());
         }
@@ -154,9 +154,9 @@ public class Mesh {
 
             // Specify the vertex format
             // Position in attribute 0 that is 3 floats
-            gl4.glVertexAttribFormatNV(Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex.SIZEOF);
+            gl4.glVertexAttribFormatNV(Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex.SIZE);
             // Color in attribute 1 that is 4 unsigned bytes
-            gl4.glVertexAttribFormatNV(Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true, Vertex.SIZEOF);
+            gl4.glVertexAttribFormatNV(Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true, Vertex.SIZE);
 
             // Enable the relevent attributes
             gl4.glEnableVertexAttribArray(Semantic.Attr.POSITION);
@@ -164,11 +164,11 @@ public class Mesh {
 
             // Enable a bunch of other attributes if we're using the heavy vertex format option
             if (useHeavyVertexFormat) {
-                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR3, 4, GL_FLOAT, false, Vertex.SIZEOF);
-                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR4, 4, GL_FLOAT, false, Vertex.SIZEOF);
-                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR5, 4, GL_FLOAT, false, Vertex.SIZEOF);
-                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR6, 4, GL_FLOAT, false, Vertex.SIZEOF);
-                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR7, 4, GL_FLOAT, false, Vertex.SIZEOF);
+                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR3, 4, GL_FLOAT, false, Vertex.SIZE);
+                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR4, 4, GL_FLOAT, false, Vertex.SIZE);
+                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR5, 4, GL_FLOAT, false, Vertex.SIZE);
+                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR6, 4, GL_FLOAT, false, Vertex.SIZE);
+                gl4.glVertexAttribFormatNV(Semantic.Attr.ATTR7, 4, GL_FLOAT, false, Vertex.SIZE);
 
                 gl4.glEnableVertexAttribArray(Semantic.Attr.ATTR3);
                 gl4.glEnableVertexAttribArray(Semantic.Attr.ATTR4);
@@ -295,9 +295,9 @@ public class Mesh {
                 gl4.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer[0]);
                 {
                     gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 3, GL_FLOAT, false,
-                            Vertex.SIZEOF, Vertex.PositionOffset);
+                            Vertex.SIZE, Vertex.PositionOffset);
                     gl4.glVertexAttribPointer(Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true,
-                            Vertex.SIZEOF, Vertex.ColorOffset);
+                            Vertex.SIZE, Vertex.ColorOffset);
                 }
                 gl4.glBindBuffer(GL_ARRAY_BUFFER, 0);
             }

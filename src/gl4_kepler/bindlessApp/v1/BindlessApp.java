@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package gl4_kepler.bindlessApp;
+package gl4_kepler.bindlessApp.v1;
 
+import gl4_kepler.bindlessApp.*;
 import nvAppBase.NvGLSLProgram;
 import com.jogamp.newt.event.KeyEvent;
 import static com.jogamp.opengl.GL2GL3.*;
@@ -162,8 +163,8 @@ public class BindlessApp extends NvSampleApp {
         // Initialize the per mesh Uniforms
         updatePerMeshUniforms(gl4, 0.0f);
 
-        gl4.glGenVertexArrays(1, Mesh.vao, 0);
-        gl4.glBindVertexArray(Mesh.vao[0]);
+        gl4.glGenVertexArrays(1, Mesh.vertexArrayName, 0);
+        gl4.glBindVertexArray(Mesh.vertexArrayName[0]);
 
         checkError(gl4, "BindlessApp.initRendering()");
     }
@@ -302,7 +303,7 @@ public class BindlessApp extends NvSampleApp {
         }
 
         Mesh building = new Mesh();
-        building.update(gl4, vertices, indices);
+        building.init(gl4, vertices, indices);
 
         return building;
     }
@@ -341,7 +342,7 @@ public class BindlessApp extends NvSampleApp {
             0, 2, 3};
 
         Mesh ground = new Mesh();
-        ground.update(gl4, vertices, indices);
+        ground.init(gl4, vertices, indices);
 
         return ground;
     }
