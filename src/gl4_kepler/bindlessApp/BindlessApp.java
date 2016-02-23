@@ -58,7 +58,7 @@ public class BindlessApp extends NvSampleApp {
     private long[] textureHandles;
     private int[] textureIds;
     private int numTextures;
-    private boolean useBindlessTextures = true;
+    private boolean useBindlessTextures = false;
     private int currentFrame = 0;
     private float currentTime = 0.0f;
 

@@ -58,7 +58,7 @@ public class BindlessApp extends NvSampleApp {
     // UI stuff
     private boolean updateUniformsEveryFrame = true;
     private boolean usePerMeshUniforms = true;
-    private boolean renderTextures = true;
+    private boolean renderTextures = false;
     private boolean queryUniformsOnce = true;
     private int[] unLoc;
 
