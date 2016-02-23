@@ -10,6 +10,7 @@ Features:
     private boolean updateUniformsEveryFrame = false;
     private boolean usePerMeshUniforms = false;
     private boolean renderTextures = false;
+    private boolean queryUniformsOnce = false;
 
     public static boolean useVertexArray = false;
     public static boolean useHeavyVertexFormat = false;
@@ -22,6 +23,7 @@ Features:
     private boolean updateUniformsEveryFrame = true;
     private boolean usePerMeshUniforms = true;
     private boolean renderTextures = false;
+    private boolean queryUniformsOnce = false;
 
     public static boolean useVertexArray = false;
     public static boolean useHeavyVertexFormat = false;
@@ -34,6 +36,7 @@ Features:
     private boolean updateUniformsEveryFrame = true;
     private boolean usePerMeshUniforms = true;
     private boolean renderTextures = false;
+    private boolean queryUniformsOnce = false;
 
     public static boolean useVertexArray = false;
     public static boolean useHeavyVertexFormat = true;
@@ -46,6 +49,7 @@ Features:
     private boolean updateUniformsEveryFrame = true;
     private boolean usePerMeshUniforms = true;
     private boolean renderTextures = false;
+    private boolean queryUniformsOnce = false;
 
     public static boolean useVertexArray = true;
     public static boolean useHeavyVertexFormat = false;
@@ -58,6 +62,7 @@ Features:
     private boolean updateUniformsEveryFrame = true;
     private boolean usePerMeshUniforms = true;
     private boolean renderTextures = true;
+    private boolean queryUniformsOnce = false;
 
     public static boolean useVertexArray = true;
     public static boolean useHeavyVertexFormat = false;
@@ -70,6 +75,7 @@ Features:
     private boolean updateUniformsEveryFrame = true;
     private boolean usePerMeshUniforms = true;
     private boolean renderTextures = true;
+    private boolean queryUniformsOnce = false;
 
     public static boolean useVertexArray = false;
     public static boolean useHeavyVertexFormat = false;
@@ -77,3 +83,16 @@ Features:
 ```
 
 ~ 14.3 fps
+
+```java
+    private boolean updateUniformsEveryFrame = true;
+    private boolean usePerMeshUniforms = true;
+    private boolean renderTextures = false;
+    private boolean queryUniformsOnce = true;
+
+    public static boolean useVertexArray = false;
+    public static boolean useHeavyVertexFormat = false;
+    public static int drawCallsPerState = 1;
+```
+
+~ 14.5 fps
