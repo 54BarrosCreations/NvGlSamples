@@ -7,7 +7,6 @@ package gl4_kepler.bindlessApp.v1;
 
 import com.jogamp.newt.event.KeyEvent;
 import static com.jogamp.opengl.GL.GL_DEPTH_TEST;
-import static com.jogamp.opengl.GL.GL_DYNAMIC_DRAW;
 import static com.jogamp.opengl.GL.GL_MAP_INVALIDATE_BUFFER_BIT;
 import static com.jogamp.opengl.GL.GL_MAP_WRITE_BIT;
 import static com.jogamp.opengl.GL.GL_TEXTURE0;
@@ -17,6 +16,10 @@ import static com.jogamp.opengl.GL2ES3.GL_TEXTURE_MAX_LEVEL;
 import static com.jogamp.opengl.GL2ES3.GL_UNIFORM_BUFFER;
 import static com.jogamp.opengl.GL2ES3.GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
 import static com.jogamp.opengl.GL2GL3.*;
+import static com.jogamp.opengl.GL3ES3.GL_ALREADY_SIGNALED;
+import static com.jogamp.opengl.GL3ES3.GL_CONDITION_SATISFIED;
+import static com.jogamp.opengl.GL3ES3.GL_SYNC_FLUSH_COMMANDS_BIT;
+import static com.jogamp.opengl.GL3ES3.GL_SYNC_GPU_COMMANDS_COMPLETE;
 import com.jogamp.opengl.GL4;
 import static com.jogamp.opengl.GL4.GL_MAP_COHERENT_BIT;
 import static com.jogamp.opengl.GL4.GL_MAP_PERSISTENT_BIT;
@@ -44,7 +47,7 @@ import nvAppBase.ProgramEntry;
  */
 public class BindlessApp extends NvSampleApp {
 
-    private final int SQRT_BUILDING_COUNT = 200;
+    private final int SQRT_BUILDING_COUNT = 150;
     private final int TEXTURE_FRAME_COUNT = 180;
     private final float ANIMATION_DURATION = 5f;
 
@@ -60,6 +63,7 @@ public class BindlessApp extends NvSampleApp {
     private ByteBuffer perMeshPointer;
 //    private ByteBuffer perMeshPointer = GLBuffers.newDirectByteBuffer(Vec4.SIZE + Vec2.SIZE);
     private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
+    private long syncName;
 
     // uniform buffer object (UBO) for mesh param data
     private PerMesh[] perMesh;
@@ -179,8 +183,12 @@ public class BindlessApp extends NvSampleApp {
             int uniformBlockSize = Math.max(Vec4.SIZE + Vec2.SIZE, uniformBufferOffset.get(0));
             gl4.glBufferStorage(GL_UNIFORM_BUFFER, uniformBlockSize, null, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT
                     | GL_MAP_COHERENT_BIT);
+//            gl4.glBufferStorage(GL_UNIFORM_BUFFER, uniformBlockSize, null, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT
+//                    | GL_MAP_FLUSH_EXPLICIT_BIT);
             perMeshPointer = gl4.glMapBufferRange(GL_UNIFORM_BUFFER, 0, Vec4.SIZE + Vec2.SIZE, GL_MAP_WRITE_BIT
                     | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+//            perMeshPointer = gl4.glMapBufferRange(GL_UNIFORM_BUFFER, 0, Vec4.SIZE + Vec2.SIZE, GL_MAP_WRITE_BIT
+//                    | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT );
 //            gl4.glBufferData(GL_UNIFORM_BUFFER, uniformBlockSize, null, GL_DYNAMIC_DRAW);
         }
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -445,12 +453,17 @@ public class BindlessApp extends NvSampleApp {
         // Render all of the meshes
         for (int i = 0; i < meshes.length; i++) {
 
+            //Wait until the gpu is no longer using the buffer
+//            waitBuffer(gl4);
+
             // If enabled, update the per mesh uniforms for each mesh rendered
             if (usePerMeshUniforms) {
 
                 perMeshPointer.asFloatBuffer().put(perMesh[i].toFa());
 //                gl4.glBufferSubData(GL_UNIFORM_BUFFER, 0, Vec4.SIZE + Vec2.SIZE, perMeshPointer);
-                gl4.glMemoryBarrier(0xffffffff);
+//                gl4.glMemoryBarrier(0xffffffff);
+//                gl4.glFlushMappedBufferRange(GL_UNIFORM_BUFFER, 0, PerMesh.SIZE);
+                gl4.glInvalidateBufferData(bufferName.get(Buffer.PER_MESH));
             }
 
             meshes[i].renderPrep(gl4);
@@ -458,6 +471,9 @@ public class BindlessApp extends NvSampleApp {
                 meshes[i].render(gl4);
             }
             meshes[i].renderFinish(gl4);
+
+            //Place a fence wich will be removed when the draw command has finished
+//            lockBuffer(gl4);
         }
 
         // Disable the vertex and pixel shader
@@ -468,6 +484,24 @@ public class BindlessApp extends NvSampleApp {
             currentTime = 0.0f;
         }
         currentFrame = (int) (180.0f * currentTime / ANIMATION_DURATION);
+    }
+
+    private void lockBuffer(GL4 gl4) {
+        if (syncName != 0) {
+            gl4.glDeleteSync(syncName);
+        }
+        syncName = gl4.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    }
+
+    private void waitBuffer(GL4 gl4) {
+        if (syncName != 0) {
+            while (true) {
+                int waitReturn = gl4.glClientWaitSync(syncName, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
+                if (waitReturn == GL_ALREADY_SIGNALED || waitReturn == GL_CONDITION_SATISFIED) {
+                    return;
+                }
+            }
+        }
     }
 
     @Override
