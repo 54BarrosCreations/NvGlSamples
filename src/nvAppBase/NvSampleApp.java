@@ -30,6 +30,7 @@ public abstract class NvSampleApp extends NvAppBase {
     private NvStopWatch drawTimer;
     private float frameDelta = 0.0f;
     private float totalTime;
+    private boolean printExtensions = false;
 
     public NvSampleApp(String appTitle) {
 
@@ -38,7 +39,7 @@ public abstract class NvSampleApp extends NvAppBase {
         transformer = new NvInputTransformer();
 
         ProgramEntry.glWindow.addMouseListener(transformer);
-        
+
         frameTimer = new NvStopWatch();
 
         drawTimer = new NvStopWatch();
@@ -74,26 +75,27 @@ public abstract class NvSampleApp extends NvAppBase {
         System.out.println("GL_VERSION = " + gl4.glGetString(GL_VERSION));
         System.out.println("GL_VENDOR = " + gl4.glGetString(GL_VENDOR));
 
-        /**
-         * Break the extensions into lines without breaking extensions (since
-         * unbroken line-wrap with extensions hurts search)
-         */
-        int[] count = {0};
-        gl4.glGetIntegerv(GL4.GL_NUM_EXTENSIONS, count, 0);
-        System.out.println("GL_EXTENSIONS = ");
-        int lineMaxLen = 80;
-        String currExt, currLine = gl4.glGetStringi(GL4.GL_EXTENSIONS, 0);
-        for (int i = 1; i < count[0]; i++) {
-            currExt = gl4.glGetStringi(GL4.GL_EXTENSIONS, i);
-            if ((currLine + " " + currExt).length() < lineMaxLen) {
-                currLine = currLine + " " + currExt;
-            } else {
-                System.out.println("" + currLine);
-                currLine = currExt;
+        if (printExtensions) {
+            /**
+             * Break the extensions into lines without breaking extensions (since
+             * unbroken line-wrap with extensions hurts search)
+             */
+            int[] count = {0};
+            gl4.glGetIntegerv(GL4.GL_NUM_EXTENSIONS, count, 0);
+            System.out.println("GL_EXTENSIONS = ");
+            int lineMaxLen = 80;
+            String currExt, currLine = gl4.glGetStringi(GL4.GL_EXTENSIONS, 0);
+            for (int i = 1; i < count[0]; i++) {
+                currExt = gl4.glGetStringi(GL4.GL_EXTENSIONS, i);
+                if ((currLine + " " + currExt).length() < lineMaxLen) {
+                    currLine = currLine + " " + currExt;
+                } else {
+                    System.out.println("" + currLine);
+                    currLine = currExt;
+                }
             }
+            System.out.println("" + currLine);
         }
-        System.out.println("" + currLine);
-
         initRendering(gl4);
     }
 
@@ -121,9 +123,9 @@ public abstract class NvSampleApp extends NvAppBase {
         drawTimer.start();
 
         baseDraw(gl4);
-        
+
         checkError(gl4, "NvSampleApp.display()");
-        
+
         drawable.swapBuffers();
     }
 
@@ -139,7 +141,7 @@ public abstract class NvSampleApp extends NvAppBase {
     public final void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
 
         GL4 gl4 = drawable.getGL().getGL4();
-        
+
         baseReshape(gl4, x, y, width, height);
     }
 
@@ -152,37 +154,37 @@ public abstract class NvSampleApp extends NvAppBase {
         this.height = height;
 
         transformer.setScreenSize(width, height);
-        
+
         reshape(gl4, x, y, width, height);
     }
-    
+
     @Override
-    public void reshape(GL4 gl4, int x, int y, int width, int height) {        
+    public void reshape(GL4 gl4, int x, int y, int width, int height) {
     }
 
     @Override
     public final void dispose(GLAutoDrawable drawable) {
-        
+
         GL4 gl4 = drawable.getGL().getGL4();
-        
+
         baseShutdownRendering(gl4);
-        
+
         ProgramEntry.animator.stop();
         System.exit(0);
     }
-    
+
     private void baseShutdownRendering(GL4 gl4) {
         shutdownRendering(gl4);
     }
-    
+
     @Override
-    public void shutdownRendering(GL4 gl4) {        
+    public void shutdownRendering(GL4 gl4) {
     }
 
     public float getFrameDeltaTime() {
         return frameDelta;
     }
-    
+
     protected boolean checkError(GL gl, String title) {
 
         int error = gl.glGetError();

@@ -31,7 +31,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //----------------------------------------------------------------------------------
-package nvAppBase;
+package gl4_kepler.bindlessApp.v0;
 
 import static com.jogamp.opengl.GL2ES2.GL_FRAGMENT_SHADER;
 import static com.jogamp.opengl.GL2ES2.GL_VERTEX_SHADER;
@@ -45,12 +45,12 @@ import com.jogamp.opengl.util.glsl.ShaderProgram;
  */
 public class NvGLSLProgram {
 
-    private int program;
+    private int programName;
     private boolean logAllMissing = false;
     private boolean strict;
 
     private NvGLSLProgram(int program, boolean strict) {
-        this.program = program;
+        this.programName = program;
         this.strict = strict;
     }
 
@@ -62,14 +62,35 @@ public class NvGLSLProgram {
 
         ShaderProgram shaderProgram = new ShaderProgram();
 
-        ShaderCode vertShaderCode = ShaderCode.create(gl4, GL_VERTEX_SHADER,
-                NvGLSLProgram.class, root, null, shaderName, "vert", null, true);
-        ShaderCode fragShaderCode = ShaderCode.create(gl4, GL_FRAGMENT_SHADER,
-                NvGLSLProgram.class, root, null, shaderName, "frag", null, true);
+        ShaderCode vertShaderCode = ShaderCode.create(gl4, GL_VERTEX_SHADER, NvGLSLProgram.class, root, null,
+                shaderName, "vert", null, true);
+        ShaderCode fragShaderCode = ShaderCode.create(gl4, GL_FRAGMENT_SHADER, NvGLSLProgram.class, root, null,
+                shaderName, "frag", null, true);
 
         shaderProgram.add(vertShaderCode);
         shaderProgram.add(fragShaderCode);
+
+        shaderProgram.init(gl4);
+
+        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.POSITION, "inPos");
+        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.COLOR, "inColor");
+        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.ATTR0, "inAttrib0");
+        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.ATTR1, "inAttrib1");
+        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.ATTR2, "inAttrib2");
+        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.ATTR3, "inAttrib3");
+        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.ATTR4, "inAttrib4");
+        gl4.glBindFragDataLocation(shaderProgram.program(), Semantic.Frag.COLOR, "fragColor");
+
         shaderProgram.link(gl4, System.out);
+        
+        System.out.println("inPos: " + gl4.glGetAttribLocation(shaderProgram.program(), "inPos"));
+        System.out.println("inColor: " + gl4.glGetAttribLocation(shaderProgram.program(), "inColor"));
+        System.out.println("inAttrib0: " + gl4.glGetAttribLocation(shaderProgram.program(), "inAttrib0"));
+        System.out.println("inAttrib1: " + gl4.glGetAttribLocation(shaderProgram.program(), "inAttrib1"));
+        System.out.println("inAttrib2: " + gl4.glGetAttribLocation(shaderProgram.program(), "inAttrib2"));
+        System.out.println("inAttrib3: " + gl4.glGetAttribLocation(shaderProgram.program(), "inAttrib3"));
+        System.out.println("inAttrib4: " + gl4.glGetAttribLocation(shaderProgram.program(), "inAttrib4"));
+        System.out.println("fragColor: " + gl4.glGetFragDataLocation(shaderProgram.program(), "fragColor"));
 
         return new NvGLSLProgram(shaderProgram.program(), strict);
     }
@@ -80,11 +101,11 @@ public class NvGLSLProgram {
 
     public int getAttribLocation(GL4 gl4, String attribute, boolean isOptional) {
 
-        int result = gl4.glGetAttribLocation(program, attribute);
+        int result = gl4.glGetAttribLocation(programName, attribute);
 
         if (result == -1) {
             if ((logAllMissing || strict) && !isOptional) {
-                System.err.println("could not find attribute " + attribute + " in program " + program);
+                System.err.println("could not find attribute " + attribute + " in program " + programName);
             }
         }
 
@@ -92,7 +113,7 @@ public class NvGLSLProgram {
     }
 
     public void enable(GL4 gl4) {
-        gl4.glUseProgram(program);
+        gl4.glUseProgram(programName);
     }
 
     public void disable(GL4 gl4) {
@@ -105,11 +126,11 @@ public class NvGLSLProgram {
 
     public int getUniformLocation(GL4 gl4, String uniform, boolean isOptional) {
 
-        int result = gl4.glGetUniformLocation(program, uniform);
+        int result = gl4.glGetUniformLocation(programName, uniform);
 
         if (result == -1) {
             if ((logAllMissing || strict) && !isOptional) {
-                System.err.println("could not find uniform " + uniform + " in program " + program);
+                System.err.println("could not find uniform " + uniform + " in program " + programName);
             }
         }
 

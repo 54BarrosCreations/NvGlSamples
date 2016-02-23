@@ -33,7 +33,6 @@
 //----------------------------------------------------------------------------------
 package gl4_kepler.bindlessApp.v0;
 
-import gl4_kepler.bindlessApp.*;
 import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_ELEMENT_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_FLOAT;
@@ -44,9 +43,9 @@ import static com.jogamp.opengl.GL.GL_UNSIGNED_SHORT;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
-import nvAppBase.Semantic;
 
 /**
  *
@@ -64,26 +63,13 @@ public class Mesh {
     private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);    // vertex buffer object
     private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1);
     public static boolean useVertexArray = false;
-    public static boolean setVertexFormatOnEveryDrawCall = true;
-    public static boolean useHeavyVertexFormat = false;
+    public static boolean useHeavyVertexFormat = true;
     public static int drawCallsPerState = 1;
     private int elementCount;
 
     public Mesh() {
     }
 
-    /**
-     * This method is called to update the vertex and index data for the mesh.
-     * For GL_NV_vertex_buffer_unified_memory (VBUM), we ask the driver to give
-     * us GPU pointers for the buffers. Later, when we render, we use these GPU
-     * pointers directly. By using GPU pointers, the driver can avoid many
-     * system memory accesses which pollute the CPU caches and reduce
-     * performance.
-     *
-     * @param gl4
-     * @param vertices
-     * @param elements
-     */
     public void init(GL4 gl4, Vertex[] vertices, short[] elements) {
 
         gl4.glGenBuffers(Buffer.MAX, bufferName);
@@ -91,9 +77,9 @@ public class Mesh {
         elementCount = elements.length;
 
         // Stick the data for the vertices and indices in their respective buffers
-        ByteBuffer vertexBuffer = ByteBuffer.allocateDirect(Vertex.SIZE * vertices.length);
-        for (Vertex vertice : vertices) {
-            vertice.toBb(vertexBuffer);
+        ByteBuffer vertexBuffer = GLBuffers.newDirectByteBuffer(Vertex.SIZE * vertices.length);
+        for (Vertex vertex : vertices) {
+            vertex.toBb(vertexBuffer);
         }
         vertexBuffer.rewind();
         ShortBuffer elementBuffer = GLBuffers.newDirectShortBuffer(elements);
@@ -102,8 +88,7 @@ public class Mesh {
         gl4.glBufferData(GL_ARRAY_BUFFER, vertexBuffer.capacity() * Byte.BYTES, vertexBuffer, GL_STATIC_DRAW);
         gl4.glBindBuffer(GL_ARRAY_BUFFER, 0);
         gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
-        gl4.glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementBuffer.capacity() * Short.BYTES, elementBuffer,
-                GL_STATIC_DRAW);
+        gl4.glBufferData(GL_ELEMENT_ARRAY_BUFFER, elementBuffer.capacity() * Short.BYTES, elementBuffer, GL_STATIC_DRAW);
         gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
         if (useVertexArray) {
@@ -137,23 +122,16 @@ public class Mesh {
 
         gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.VERTEX));
         {
-            gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex.SIZE,
-                    Vertex.PositionOffset);
-            gl4.glVertexAttribPointer(Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true, Vertex.SIZE,
-                    Vertex.ColorOffset);
+            gl4.glVertexAttribPointer(Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex.SIZE, Vertex.PositionOffset);
+            gl4.glVertexAttribPointer(Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true, Vertex.SIZE, Vertex.ColorOffset);
 
             if (useHeavyVertexFormat) {
 
-                gl4.glVertexAttribPointer(Semantic.Attr.ATTR0, 4, GL_FLOAT, false, Vertex.SIZE,
-                        Vertex.Attrib0Offset);
-                gl4.glVertexAttribPointer(Semantic.Attr.ATTR1, 4, GL_FLOAT, false, Vertex.SIZE,
-                        Vertex.Attrib1Offset);
-                gl4.glVertexAttribPointer(Semantic.Attr.ATTR2, 4, GL_FLOAT, false, Vertex.SIZE,
-                        Vertex.Attrib2Offset);
-                gl4.glVertexAttribPointer(Semantic.Attr.ATTR3, 4, GL_FLOAT, false, Vertex.SIZE,
-                        Vertex.Attrib3Offset);
-                gl4.glVertexAttribPointer(Semantic.Attr.ATTR4, 4, GL_FLOAT, false, Vertex.SIZE,
-                        Vertex.Attrib4Offset);
+                gl4.glVertexAttribPointer(Semantic.Attr.ATTR0, 4, GL_FLOAT, false, Vertex.SIZE, Vertex.Attrib0Offset);
+                gl4.glVertexAttribPointer(Semantic.Attr.ATTR1, 4, GL_FLOAT, false, Vertex.SIZE, Vertex.Attrib1Offset);
+                gl4.glVertexAttribPointer(Semantic.Attr.ATTR2, 4, GL_FLOAT, false, Vertex.SIZE, Vertex.Attrib2Offset);
+                gl4.glVertexAttribPointer(Semantic.Attr.ATTR3, 4, GL_FLOAT, false, Vertex.SIZE, Vertex.Attrib3Offset);
+                gl4.glVertexAttribPointer(Semantic.Attr.ATTR4, 4, GL_FLOAT, false, Vertex.SIZE, Vertex.Attrib4Offset);
             }
         }
         gl4.glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -193,18 +171,25 @@ public class Mesh {
      */
     public void renderFinish(GL4 gl4) {
 
-        gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
-        gl4.glDisableVertexAttribArray(Semantic.Attr.COLOR);
+        if (useVertexArray) {
 
-        if (useHeavyVertexFormat) {
+            gl4.glBindVertexArray(0);
 
-            gl4.glDisableVertexAttribArray(Semantic.Attr.ATTR0);
-            gl4.glDisableVertexAttribArray(Semantic.Attr.ATTR1);
-            gl4.glDisableVertexAttribArray(Semantic.Attr.ATTR2);
-            gl4.glDisableVertexAttribArray(Semantic.Attr.ATTR3);
-            gl4.glDisableVertexAttribArray(Semantic.Attr.ATTR4);
+        } else {
+
+            gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
+            gl4.glDisableVertexAttribArray(Semantic.Attr.COLOR);
+
+            if (useHeavyVertexFormat) {
+
+                gl4.glDisableVertexAttribArray(Semantic.Attr.ATTR0);
+                gl4.glDisableVertexAttribArray(Semantic.Attr.ATTR1);
+                gl4.glDisableVertexAttribArray(Semantic.Attr.ATTR2);
+                gl4.glDisableVertexAttribArray(Semantic.Attr.ATTR3);
+                gl4.glDisableVertexAttribArray(Semantic.Attr.ATTR4);
+            }
+
+            gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         }
-
-        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 }

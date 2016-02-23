@@ -31,52 +31,52 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //----------------------------------------------------------------------------------
-#version 420
-#extension GL_NV_shader_buffer_load : require
-#extension GL_NV_bindless_texture : require
-#extension GL_NV_gpu_shader5 : require // uint64_t
+#version 400
 
 // Input attributes
-layout in vec4 inPos;
-layout in vec4 inColor;
-layout in vec4 inAttrib0;
-layout in vec4 inAttrib1; 
-layout in vec4 inAttrib2; 
-layout in vec4 inAttrib3; 
-layout in vec4 inAttrib4; 
+in vec3 inPos;
+in vec4 inColor;
+in vec4 inAttrib0;
+in vec4 inAttrib1; 
+in vec4 inAttrib2; 
+in vec4 inAttrib3; 
+in vec4 inAttrib4; 
 
 // Outputs
-layout smooth out vec4 outColor;
-layout flat out vec2 outUV;
+smooth out vec4 color;
+flat out vec2 uv;
 
 // Uniforms
-uniform int useTextures;
-uniform int currentFrame;
-uniform mat4 modelView;
+uniform int useTexture;
+
 uniform mat4 modelViewProjection;
+
 uniform float r;
 uniform float g;
 uniform float b;
 uniform float a;
 uniform float u;
 uniform float v;
-uniform sampler2D texture_;
 
+uniform sampler2D texture_;
 
 void main() 
 {
-    vec4 positionModelSpace = inPos;
-    if (useTextures>0) 
+    vec4 positionModelSpace = vec4(inPos, 1);
+
+    if (useTexture > 0) 
         positionModelSpace.y += texture(texture_, vec2(u, v)).g;
     else 
         positionModelSpace.y += sin(positionModelSpace.y * r) * .2f;
 
     gl_Position = modelViewProjection * positionModelSpace;
 
-    outColor.r = inColor.r * r;
-    outColor.g = inColor.g * g;
-    outColor.b = inColor.b * b;
-    outColor.a = inColor.a;
-    outUV.x = u;
-    outUV.y = v;
+    color.r = inColor.r * r;
+    color.g = inColor.g * g;
+    color.b = inColor.b * b;
+    color.a = inColor.a;
+    uv.x = u;
+    uv.y = v;
+
+    //gl_Position = modelViewProjection * vec4(0.1 * float(gl_VertexID % 2), 0.1 * float(gl_VertexID / 2), 0.0, 1.0);
 }

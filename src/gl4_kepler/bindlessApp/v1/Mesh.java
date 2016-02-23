@@ -113,7 +113,7 @@ public class Mesh {
         }
 
         // Stick the data for the vertices and indices in their respective buffers
-        ByteBuffer vertexBuffer = ByteBuffer.allocateDirect(Vertex.SIZE * vertices.length);
+//        ByteBuffer vertexBuffer = ByteBuffer.allocateDirect(Vertex.SIZE * vertices.length);
         for (Vertex vertice : vertices) {
             vertice.toBb(vertexBuffer);
         }

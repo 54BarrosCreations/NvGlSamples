@@ -5,26 +5,25 @@
  */
 package gl4_kepler.bindlessApp.v0;
 
-import gl4_kepler.bindlessApp.*;
-import nvAppBase.NvGLSLProgram;
 import com.jogamp.newt.event.KeyEvent;
-import static com.jogamp.opengl.GL.GL_DYNAMIC_DRAW;
-import static com.jogamp.opengl.GL2ES3.GL_UNIFORM_BUFFER;
+import static com.jogamp.opengl.GL.GL_TEXTURE0;
+import static com.jogamp.opengl.GL.GL_TEXTURE_2D;
+import static com.jogamp.opengl.GL2ES3.GL_TEXTURE_BASE_LEVEL;
+import static com.jogamp.opengl.GL2ES3.GL_TEXTURE_MAX_LEVEL;
 import static com.jogamp.opengl.GL2GL3.*;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
-import com.jogamp.opengl.util.texture.TextureIO;
 import glm.glm;
 import glm.mat._4.Mat4;
 import glm.vec._2.Vec2;
 import glm.vec._3.Vec3;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import nvAppBase.NvImage;
+import jgli.Gl;
+import jgli.Load;
 import nvAppBase.NvSampleApp;
 import nvAppBase.ProgramEntry;
 
@@ -36,28 +35,23 @@ public class BindlessApp extends NvSampleApp {
 
     private final int SQRT_BUILDING_COUNT = 100;
     private final int TEXTURE_FRAME_COUNT = 180;
+    private final float ANIMATION_DURATION = 5f;
 
     // Simple collection of meshes to render
     private Mesh[] meshes;
 
     // Shader stuff
     private NvGLSLProgram shader;
-
     // uniform buffer object (UBO) for tranform data
-    private IntBuffer transformName = GLBuffers.newDirectIntBuffer(1);
-    private Transform transform;
-    private Mat4 projectionMatrix;
-    private ByteBuffer transformBuffer;
+    private Mat4 projectionMat;
+    private FloatBuffer mvpMatBuffer = GLBuffers.newDirectFloatBuffer(16);
 
     // uniform buffer object (UBO) for mesh param data
-    private IntBuffer perMeshName = GLBuffers.newDirectIntBuffer(1);
     private PerMeshUniforms[] perMesh;
-    private FloatBuffer perMeshBuffer;
 
     //bindless texture handle
-    private int[] textureName;
-    private int numTextures;
-    private int currentTexture = 0;
+    private IntBuffer textureName;
+    private int currentFrame = 0;
     private float currentTime = 0.0f;
 
     // UI stuff
@@ -69,23 +63,17 @@ public class BindlessApp extends NvSampleApp {
     private float t = 0.0f;
     private float minimumFrameDeltaTime = 1e6f;
 
-    // Allocation
-    private boolean usePools = true;
-
     public BindlessApp(int width, int height) {
         super("BindlessApp");
 
         transformer.setTranslationVec(new Vec3(0.0f, 0.0f, -4.0f));
-
-        transform = new Transform();
     }
 
     @Override
     public void initRendering(GL4 gl4) {
 
         // Create our pixel and vertex shader
-        shader = NvGLSLProgram.createFromFiles(gl4, "src/gl4_kepler/bindlessApp/shaders", "bindless");
-
+        shader = NvGLSLProgram.createFromFiles(gl4, "src/gl4_kepler/bindlessApp/v0/shaders", "v0");
         // Set the initial view
         transformer.setRotationVec(new Vec3((float) Math.toRadians(30.0f), (float) Math.toRadians(30.0f), 0.0f));
 
@@ -120,31 +108,10 @@ public class BindlessApp extends NvSampleApp {
                 meshIndex++;
             }
         }
+
         if (renderTextures) {
             // Initialize Textures
             initTextures(gl4);
-
-            gl4.glUniform1i(shader.getUniformLocation(gl4, "renderTextures"), renderTextures ? 1 : 0);
-
-            gl4.glUniform1i(shader.getUniformLocation(gl4, "currentTexture"), currentTexture);
-        }
-
-        // create Uniform Buffer Object (UBO) for transform data and initialize 
-        gl4.glGenBuffers(1, transformName);
-        gl4.glBindBuffer(GL_UNIFORM_BUFFER, transformName.get(0));
-        {
-            gl4.glBufferData(GL_UNIFORM_BUFFER, Transform.SIZE, null, GL_DYNAMIC_DRAW);
-        }
-        gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-        // create Uniform Buffer Object (UBO) for param data, initialize and allocate space
-        gl4.glGenBuffers(1, perMeshName);
-        gl4.glBindBuffer(GL_UNIFORM_BUFFER, transformName.get(0));
-        gl4.glBufferData(perMeshName.get(0), PerMeshUniforms.SIZE, null, GL_DYNAMIC_DRAW);
-
-        if (usePools) {
-            transformBuffer = GLBuffers.newDirectByteBuffer(Transform.SIZE);
-            perMeshBuffer = GLBuffers.newDirectFloatBuffer(PerMeshUniforms.SIZE / Float.BYTES);
         }
 
         // Initialize the per mesh Uniforms
@@ -183,7 +150,7 @@ public class BindlessApp extends NvSampleApp {
                     perMesh[index].b = radius;
                     perMesh[index].a = 0.0f;
                     perMesh[index].u = (float) j / SQRT_BUILDING_COUNT;
-                    perMesh[index].v = (float) i / SQRT_BUILDING_COUNT;
+                    perMesh[index].v = 1 - (float) i / SQRT_BUILDING_COUNT;
                 }
             }
         } else {
@@ -263,6 +230,7 @@ public class BindlessApp extends NvSampleApp {
 
         // Create the indices
         for (int i = 0; i < 24; i += 4) {
+
             indices[i / 4 * 6 + 0] = (short) (0 + i);
             indices[i / 4 * 6 + 1] = (short) (1 + i);
             indices[i / 4 * 6 + 2] = (short) (2 + i);
@@ -319,29 +287,43 @@ public class BindlessApp extends NvSampleApp {
 
     private void initTextures(GL4 gl4) {
 
-        textureName = new int[TEXTURE_FRAME_COUNT];
-        numTextures = TEXTURE_FRAME_COUNT;
+        textureName = GLBuffers.newDirectIntBuffer(TEXTURE_FRAME_COUNT);
+
+        gl4.glGenTextures(TEXTURE_FRAME_COUNT, textureName);
 
         for (int i = 0; i < TEXTURE_FRAME_COUNT; i++) {
 
             try {
-                textureName[i] = NvImage.uploadTextureFromDDSFile(gl4, "/gl4_kepler/bindlessApp/textures/NV"
-                        + i + "." + TextureIO.DDS);
+//                textureName[i] = NvImage.uploadTextureFromDDSFile(gl4, "/gl4_kepler/bindlessApp/textures/NV"
+//                        + i + "." + TextureIO.DDS);
+
+                jgli.Texture texture = Load.load("/gl4_kepler/bindlessApp/textures/NV" + i + ".dds");
+
+                gl4.glActiveTexture(GL_TEXTURE0);
+                gl4.glBindTexture(GL_TEXTURE_2D, textureName.get(i));
+                gl4.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+                gl4.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, texture.levels() - 1);
+                gl4.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST);
+                gl4.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_NEAREST);
+                gl4.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_WRAP_S, GL4.GL_REPEAT);
+                gl4.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_WRAP_T, GL4.GL_REPEAT);
+
+                jgli.Gl.Format glFormat = Gl.translate(texture.format());
+
+                for (int level = 0; level < texture.levels(); level++) {
+
+                    gl4.glTexImage2D(GL_TEXTURE_2D, level, glFormat.internal.value,
+                            texture.dimensions(level)[0], texture.dimensions(level)[1], 0,
+                            glFormat.external.value, glFormat.type.value, texture.data(level));
+                }
             } catch (IOException ex) {
                 Logger.getLogger(BindlessApp.class.getName()).log(Level.SEVERE, null, ex);
             }
-            gl4.glBindTexture(GL4.GL_TEXTURE_2D, textureName[i]);
-            gl4.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MAG_FILTER, GL4.GL_NEAREST);
-            gl4.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_MIN_FILTER, GL4.GL_NEAREST);
-            gl4.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_WRAP_S, GL4.GL_REPEAT);
-            gl4.glTexParameteri(GL4.GL_TEXTURE_2D, GL4.GL_TEXTURE_WRAP_T, GL4.GL_REPEAT);
         }
     }
 
     @Override
     public void draw(GL4 gl4) {
-
-        Mat4 modelviewMatrix;
 
         gl4.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         gl4.glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -351,22 +333,23 @@ public class BindlessApp extends NvSampleApp {
         shader.enable(gl4);
 
         // Set the transformation matrices up
-        modelviewMatrix = transformer.getModelViewMat();
-        transform.modelView = modelviewMatrix;
-        transform.modelViewProjection = projectionMatrix.mul_(modelviewMatrix);
-        
-        gl4.glBindBufferBase(GL_UNIFORM_BUFFER, 2, transformName.get(0));
-        if (!usePools) {
-            transformBuffer = GLBuffers.newDirectByteBuffer(Transform.SIZE);
+        {
+            Mat4 mvMat = transformer.getModelViewMat();
+            Mat4 mvpMat = projectionMat.mul_(mvMat);
+            mvpMatBuffer.put(mvpMat.toFa_()).rewind();
+            gl4.glUniformMatrix4fv(shader.getUniformLocation(gl4, "modelViewProjection"), 1, false, mvpMatBuffer);
         }
-        transformBuffer.asFloatBuffer()
-                .put(transform.modelView.toFa_())
-                .put(transform.modelViewProjection.toFa_());
-        transformBuffer.putInt(Transform.USEBINDLESSUNIFORM_OFFSET, transform.useBindlessUniforms);
-        gl4.glNamedBufferSubData(transformName.get(0), 0, Transform.SIZE, transformBuffer);
+
+        gl4.glUniform1i(shader.getUniformLocation(gl4, "useTexture"), renderTextures ? 1 : 0);
+        if (renderTextures) {
+            gl4.glActiveTexture(GL_TEXTURE0);
+            gl4.glBindTexture(GL_TEXTURE_2D, textureName.get(currentFrame));
+            gl4.glUniform1i(shader.getUniformLocation(gl4, "texture_"), 0);
+        }
 
         // If we are going to update the uniforms every frame, do it now
         if (updateUniformsEveryFrame) {
+
             float deltaTime;
             float dt;
 
@@ -382,9 +365,14 @@ public class BindlessApp extends NvSampleApp {
             updatePerMeshUniforms(t);
         }
 
-        // If all of the meshes are sharing the same vertex format, we can just set the vertex format once
-        if (!Mesh.setVertexFormatOnEveryDrawCall) {
-            Mesh.renderPrep(gl4);
+        if (!usePerMeshUniforms) {
+
+            gl4.glUniform1f(shader.getUniformLocation(gl4, "r"), perMesh[0].r);
+            gl4.glUniform1f(shader.getUniformLocation(gl4, "g"), perMesh[0].g);
+            gl4.glUniform1f(shader.getUniformLocation(gl4, "b"), perMesh[0].b);
+            gl4.glUniform1f(shader.getUniformLocation(gl4, "a"), perMesh[0].a);
+            gl4.glUniform1f(shader.getUniformLocation(gl4, "u"), perMesh[0].u);
+            gl4.glUniform1f(shader.getUniformLocation(gl4, "v"), perMesh[0].v);
         }
 
         // Render all of the meshes
@@ -393,61 +381,36 @@ public class BindlessApp extends NvSampleApp {
             // If enabled, update the per mesh uniforms for each mesh rendered
             if (usePerMeshUniforms) {
 
-                if (useBindlessUniforms) {
-
-                    long perMeshUniformsGPUPtr_i_th;
-
-                    // *** INTERESTING ***
-                    // Compute a GPU pointer for the per mesh uniforms for this mesh
-                    perMeshUniformsGPUPtr_i_th = perMeshUniformsGPUPtr[0] + PerMeshUniforms.SIZE * i;
-                    // Pass a GPU pointer to the vertex shader for the per mesh uniform data via a vertex attribute
-                    gl4.glVertexAttribI2i(bindlessPerMeshUniformsPtrAttribLocation,
-                            (int) (perMeshUniformsGPUPtr_i_th & 0xFFFFFFFF),
-                            (int) ((perMeshUniformsGPUPtr_i_th >> 32) & 0xFFFFFFFF));
-
-                } else {
-
-                    gl4.glBindBufferBase(GL_UNIFORM_BUFFER, 3, perMeshName.get(0));
-                    if (!usePools) {
-                        perMeshBuffer = GLBuffers.newDirectFloatBuffer(PerMeshUniforms.SIZE / Float.BYTES);
-                    }
-                    perMeshBuffer.put(perMesh[i].toFloatArray()).rewind();
-                    gl4.glNamedBufferSubData(perMeshName.get(0), 0, PerMeshUniforms.SIZE, perMeshBuffer);
-                }
+                gl4.glUniform1f(shader.getUniformLocation(gl4, "r"), perMesh[i].r);
+                gl4.glUniform1f(shader.getUniformLocation(gl4, "g"), perMesh[i].g);
+                gl4.glUniform1f(shader.getUniformLocation(gl4, "b"), perMesh[i].b);
+                gl4.glUniform1f(shader.getUniformLocation(gl4, "a"), perMesh[i].a);
+                gl4.glUniform1f(shader.getUniformLocation(gl4, "u"), perMesh[i].u);
+                gl4.glUniform1f(shader.getUniformLocation(gl4, "v"), perMesh[i].v);
             }
 
-            // If we're not sharing vertex formats between meshes, we have to set the vertex format everytime it changes.
-            if (Mesh.setVertexFormatOnEveryDrawCall) {
-                Mesh.renderPrep(gl4);
+            meshes[i].renderPrep(gl4);
+            {
+                meshes[i].render(gl4);
             }
-
-            // Now that everything is set up, do the actual rendering
-            // The code that selects between rendering with Vertex Array Objects (VAO) and 
-            // Vertex Buffer Unified Memory (VBUM) is located in Mesh::render()
-            // The code that gets the GPU pointer for use with VBUM rendering is located in Mesh::update()
-            // Beginning of the time query
-            meshes[i].render(gl4);
-
-            // If we're not sharing vertex formats between meshes, we have to reset the vertex format to a default state after each mesh
-            if (Mesh.setVertexFormatOnEveryDrawCall) {
-                Mesh.renderFinish(gl4);
-            }
-        }
-
-        // If we're sharing vertex formats between meshes, we only have to reset vertex format to a default state once
-        if (!Mesh.setVertexFormatOnEveryDrawCall) {
-            Mesh.renderFinish(gl4);
+            meshes[i].renderFinish(gl4);
         }
 
         // Disable the vertex and pixel shader
         shader.disable(gl4);
+
+        currentTime += getFrameDeltaTime();
+        if (currentTime > ANIMATION_DURATION) {
+            currentTime = 0.0f;
+        }
+        currentFrame = (int) (180.0f * currentTime / ANIMATION_DURATION);
     }
 
     @Override
     public void reshape(GL4 gl4, int x, int y, int width, int height) {
 
         gl4.glViewport(x, y, width, height);
-        projectionMatrix = glm.perspective_(45f, (float) width / height, .1f, 10f);
+        projectionMat = glm.perspective_(45f * 2f * (float) Math.PI / 360f, (float) width / height, .1f, 10f);
 
         checkError(gl4, "BindlessApp.reshape");
     }

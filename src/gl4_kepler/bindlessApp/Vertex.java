@@ -34,9 +34,6 @@
 package gl4_kepler.bindlessApp;
 
 import com.jogamp.opengl.util.GLBuffers;
-import dev.Vec4u8;
-import glm.vec._3.Vec3;
-import glm.vec._4.Vec4;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
@@ -46,63 +43,61 @@ import java.nio.ByteBuffer;
  */
 public class Vertex {
 
-    public Vec3 position;
-    public Vec4u8 color;
-    public Vec4 attrib0;
-    public Vec4 attrib1;
-    public Vec4 attrib2;
-    public Vec4 attrib3;
-    public Vec4 attrib4;
+    public float[] position = new float[3];
+    public byte[] color = new byte[4];
+    public float[] attrib0 = new float[4];
+    public float[] attrib1 = new float[4];
+    public float[] attrib2 = new float[4];
+    public float[] attrib3 = new float[4];
+    public float[] attrib4 = new float[4];
+    public float[] attrib5 = new float[4];
+    public float[] attrib6 = new float[4];
 
     public Vertex(float x, float y, float z, float r, float g, float b, float a) {
 
-        position = new Vec3(x, y, z);
-        color = new Vec4u8(
-                (byte) (Math.max(Math.min(r, 1.0f), 0.0f) * 255.5f),
-                (byte) (Math.max(Math.min(g, 1.0f), 0.0f) * 255.5f),
-                (byte) (Math.max(Math.min(b, 1.0f), 0.0f) * 255.5f),
-                (byte) (Math.max(Math.min(a, 1.0f), 0.0f) * 255.5f));
-        attrib0 = new Vec4();
-        attrib1 = new Vec4();
-        attrib2 = new Vec4();
-        attrib3 = new Vec4();
-        attrib4 = new Vec4();
+        position[0] = x;
+        position[1] = y;
+        position[2] = z;
+        color[0] = (byte) (Math.max(Math.min(r, 1.0f), 0.0f) * 255.5f);
+        color[1] = (byte) (Math.max(Math.min(g, 1.0f), 0.0f) * 255.5f);
+        color[2] = (byte) (Math.max(Math.min(b, 1.0f), 0.0f) * 255.5f);
+        color[3] = (byte) (Math.max(Math.min(a, 1.0f), 0.0f) * 255.5f);
     }
 
-//    public ByteBuffer toByteBuffer() {
-//        ByteBuffer result = GLBuffers.newDirectByteBuffer(SIZE);
-//        for (int i = 0; i < 4; i++) {
-//            if (i < 3) {
-//                result.putFloat(PositionOffset + i * Float.BYTES, position[i]);
-//            }
-//            result.put(ColorOffset + i * Byte.BYTES, color[i]);
-//            result.putFloat(Attrib0Offset + i * Float.BYTES, attrib0[i]);
-//            result.putFloat(Attrib1Offset + i * Float.BYTES, attrib1[i]);
-//            result.putFloat(Attrib2Offset + i * Float.BYTES, attrib2[i]);
-//            result.putFloat(Attrib3Offset + i * Float.BYTES, attrib3[i]);
-//            result.putFloat(Attrib4Offset + i * Float.BYTES, attrib4[i]);
-//        }
-//        result.rewind();
-//        return result;
+    public ByteBuffer toByteBuffer() {
+        ByteBuffer result = GLBuffers.newDirectByteBuffer(SIZE);
+        for (int i = 0; i < 4; i++) {
+            if (i < 3) {
+                result.putFloat(PositionOffset + i * Float.BYTES, position[i]);
+            }
+            result.put(ColorOffset + i * Byte.BYTES, color[i]);
+            result.putFloat(Attrib0Offset + i * Float.BYTES, attrib0[i]);
+            result.putFloat(Attrib1Offset + i * Float.BYTES, attrib1[i]);
+            result.putFloat(Attrib2Offset + i * Float.BYTES, attrib2[i]);
+            result.putFloat(Attrib3Offset + i * Float.BYTES, attrib3[i]);
+            result.putFloat(Attrib4Offset + i * Float.BYTES, attrib4[i]);
+            result.putFloat(Attrib5Offset + i * Float.BYTES, attrib5[i]);
+            result.putFloat(Attrib6Offset + i * Float.BYTES, attrib6[i]);
+        }
+        result.rewind();
+        return result;
+    }
+
+//    @Override
+//    public String toString() {
+//        return "position: (" + position[0] + ", " + position[1] + ", " + position[2] + ") color: ("
+//                + color[0] + ", " + color[1] + ", " + color[2] + ", " + color[3] + ")";
 //    }
 
-    public void toBb(ByteBuffer bb) {
-        bb
-                .putFloat(position.x).putFloat(position.y).putFloat(position.z)
-                .put(color.x).put(color.y).put(color.z).put(color.w)
-                .putFloat(attrib0.x).putFloat(attrib0.y).putFloat(attrib0.z).putFloat(attrib0.w)
-                .putFloat(attrib1.x).putFloat(attrib1.y).putFloat(attrib1.z).putFloat(attrib1.w)
-                .putFloat(attrib2.x).putFloat(attrib2.y).putFloat(attrib2.z).putFloat(attrib2.w)
-                .putFloat(attrib3.x).putFloat(attrib3.y).putFloat(attrib3.z).putFloat(attrib3.w)
-                .putFloat(attrib4.x).putFloat(attrib4.y).putFloat(attrib4.z).putFloat(attrib4.w);
-    }
-
     public static final int PositionOffset = 0;
-    public static final int ColorOffset = Vec3.SIZE; // 12
-    public static final int Attrib0Offset = Vec3.SIZE + Vec4u8.SIZE; // 16
-    public static final int Attrib1Offset = Vec3.SIZE + Vec4u8.SIZE + Vec4.SIZE; // 32
-    public static final int Attrib2Offset = Vec3.SIZE + Vec4u8.SIZE + 2 * Vec4.SIZE; // 48
-    public static final int Attrib3Offset = Vec3.SIZE + Vec4u8.SIZE + 3 * Vec4.SIZE; // 64
-    public static final int Attrib4Offset = Vec3.SIZE + Vec4u8.SIZE + 4 * Vec4.SIZE; // 80
-    public static final int SIZE = Vec3.SIZE + Vec4u8.SIZE + 5 * Vec4.SIZE; // 128
+    public static final int ColorOffset = 3 * Float.BYTES; // 12
+    public static final int Attrib0Offset = 3 * Float.BYTES + 4 * Byte.BYTES; // 16
+    public static final int Attrib1Offset = (3 + 4 * 1) * Float.BYTES + 4 * Byte.BYTES; // 32
+    public static final int Attrib2Offset = (3 + 4 * 2) * Float.BYTES + 4 * Byte.BYTES; // 48
+    public static final int Attrib3Offset = (3 + 4 * 3) * Float.BYTES + 4 * Byte.BYTES; // 64
+    public static final int Attrib4Offset = (3 + 4 * 4) * Float.BYTES + 4 * Byte.BYTES; // 80
+    public static final int Attrib5Offset = (3 + 4 * 5) * Float.BYTES + 4 * Byte.BYTES; // 96
+    public static final int Attrib6Offset = (3 + 4 * 6) * Float.BYTES + 4 * Byte.BYTES; // 112
+    public static final int SIZE = (3 + 4 * 7) * Float.BYTES + 4 * Byte.BYTES; // 128
+//    public static final int SIZEOF = 3 * Float.BYTES + 4 * Byte.BYTES; // 128
 }

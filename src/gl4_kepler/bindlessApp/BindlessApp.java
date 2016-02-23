@@ -33,6 +33,7 @@ public class BindlessApp extends NvSampleApp {
 
     private final int SQRT_BUILDING_COUNT = 100;
     private final int TEXTURE_FRAME_COUNT = 180;
+    private final float ANIMATION_DURATION = 5f;
 
     // Simple collection of meshes to render
     private Mesh[] meshes;
@@ -440,6 +441,16 @@ public class BindlessApp extends NvSampleApp {
             Mesh.renderPrep(gl4);
         }
 
+        if (!usePerMeshUniforms) {
+            // TODO
+//            gl4.glUniform1f(shader.getUniformLocation(gl4, "r"), perMesh[0].r);
+//            gl4.glUniform1f(shader.getUniformLocation(gl4, "g"), perMesh[0].g);
+//            gl4.glUniform1f(shader.getUniformLocation(gl4, "b"), perMesh[0].b);
+//            gl4.glUniform1f(shader.getUniformLocation(gl4, "a"), perMesh[0].a);
+//            gl4.glUniform1f(shader.getUniformLocation(gl4, "u"), perMesh[0].u);
+//            gl4.glUniform1f(shader.getUniformLocation(gl4, "v"), perMesh[0].v);
+        }
+        
         // Render all of the meshes
         for (int i = 0; i < meshes.length; i++) {
 
@@ -494,6 +505,12 @@ public class BindlessApp extends NvSampleApp {
 
         // Disable the vertex and pixel shader
         shader.disable(gl4);
+        
+        currentTime += getFrameDeltaTime();
+        if (currentTime > ANIMATION_DURATION) {
+            currentTime = 0.0f;
+        }
+        currentFrame = (int) (180.0f * currentTime / ANIMATION_DURATION);
     }
 
     @Override

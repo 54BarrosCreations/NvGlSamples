@@ -31,22 +31,22 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //----------------------------------------------------------------------------------
-#version 420 compatibility
-#extension GL_NV_bindless_texture : require
-#extension GL_NV_gpu_shader5 : require // uint64_t
+#version 400
 
-layout smooth in vec4 inColor;
-layout flat in vec2 inUV;
+smooth in vec4 color;
+flat in vec2 uv;
 
-layout out vec4 fragColor;
+out vec4 fragColor;
 
 uniform sampler2D texture_;
-uniform int useTextures;
+uniform int useTexture;
 
 void main() {
 
-    if (useBindless > 0) 
-        fragColor = texture(texture_, inUV);
+    if (useTexture > 0) 
+        fragColor = texture(texture_, uv);
     else 
-        fragColor = inColor;
+        fragColor = color;
+
+    //fragColor = vec4(1,0,0,1);
 }
