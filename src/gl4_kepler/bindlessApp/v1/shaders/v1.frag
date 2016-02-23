@@ -31,22 +31,35 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //----------------------------------------------------------------------------------
-#version 400
+#version 450
 
-smooth in vec4 color;
-flat in vec2 uv;
+#define CONSTANT    1
 
-out vec4 fragColor;
+#define BLOCK       0
+
+#define FRAG_COLOR  0
+
+// Uniforms
+layout (binding = CONSTANT) uniform Constant
+{
+    int renderTexture;
+} constant;
+
+// Inputs
+layout (location = BLOCK) in Block 
+{
+    vec4 color; // smooth by default
+    flat vec2 uv;
+} inBlock;
 
 uniform sampler2D texture_;
-uniform int renderTexture;
+
+layout (location = FRAG_COLOR) out vec4 fragColor;
 
 void main() {
 
-    if (renderTexture > 0) 
-        fragColor = texture(texture_, uv);
+    if (constant.renderTexture > 0) 
+        fragColor = texture(texture_, inBlock.uv);
     else 
-        fragColor = color;
-
-    //fragColor = vec4(1,0,0,1);
+        fragColor = inBlock.color;
 }

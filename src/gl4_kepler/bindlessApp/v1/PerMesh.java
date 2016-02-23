@@ -39,7 +39,7 @@ import gl4_kepler.bindlessApp.*;
  *
  * @author GBarbieri
  */
-public class PerMeshUniforms {
+public class PerMesh {
 
     public float r, g, b, a, u, v;
 
@@ -47,11 +47,11 @@ public class PerMeshUniforms {
     public static final int SIZE = COUNT * Float.BYTES;
     private float[] fa;
 
-    public PerMeshUniforms() {
+    public PerMesh() {
         fa = new float[6];
     }
 
-    public float[] toFloatArray() {
+    public float[] toFa() {
         fa[0] = r;
         fa[1] = g;
         fa[2] = b;

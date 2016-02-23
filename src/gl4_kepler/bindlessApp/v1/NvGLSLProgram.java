@@ -31,7 +31,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //----------------------------------------------------------------------------------
-package gl4_kepler.bindlessApp.v0;
+package gl4_kepler.bindlessApp.v1;
 
 import static com.jogamp.opengl.GL2ES2.GL_FRAGMENT_SHADER;
 import static com.jogamp.opengl.GL2ES2.GL_VERTEX_SHADER;
@@ -72,25 +72,7 @@ public class NvGLSLProgram {
 
         shaderProgram.init(gl4);
 
-        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.POSITION, "inPos");
-        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.COLOR, "inColor");
-        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.ATTR0, "inAttrib0");
-        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.ATTR1, "inAttrib1");
-        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.ATTR2, "inAttrib2");
-        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.ATTR3, "inAttrib3");
-        gl4.glBindAttribLocation(shaderProgram.program(), Semantic.Attr.ATTR4, "inAttrib4");
-        gl4.glBindFragDataLocation(shaderProgram.program(), Semantic.Frag.COLOR, "fragColor");
-
         shaderProgram.link(gl4, System.out);
-        
-        System.out.println("inPos: " + gl4.glGetAttribLocation(shaderProgram.program(), "inPos"));
-        System.out.println("inColor: " + gl4.glGetAttribLocation(shaderProgram.program(), "inColor"));
-        System.out.println("inAttrib0: " + gl4.glGetAttribLocation(shaderProgram.program(), "inAttrib0"));
-        System.out.println("inAttrib1: " + gl4.glGetAttribLocation(shaderProgram.program(), "inAttrib1"));
-        System.out.println("inAttrib2: " + gl4.glGetAttribLocation(shaderProgram.program(), "inAttrib2"));
-        System.out.println("inAttrib3: " + gl4.glGetAttribLocation(shaderProgram.program(), "inAttrib3"));
-        System.out.println("inAttrib4: " + gl4.glGetAttribLocation(shaderProgram.program(), "inAttrib4"));
-        System.out.println("fragColor: " + gl4.glGetFragDataLocation(shaderProgram.program(), "fragColor"));
 
         return new NvGLSLProgram(shaderProgram.program(), strict);
     }

@@ -43,9 +43,9 @@ import static com.jogamp.opengl.GL.GL_UNSIGNED_SHORT;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
+import nvAppBase.BufferUtils;
 
 /**
  *
@@ -62,7 +62,7 @@ public class Mesh {
 
     private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);    // vertex buffer object
     private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1);
-    public static boolean useVertexArray = false;
+    public static boolean useVertexArray = true;
     public static boolean useHeavyVertexFormat = true;
     public static int drawCallsPerState = 1;
     private int elementCount;
@@ -99,6 +99,9 @@ public class Mesh {
             }
             gl4.glBindVertexArray(0);
         }
+        
+        BufferUtils.destroyDirectBuffer(vertexBuffer);
+        BufferUtils.destroyDirectBuffer(elementBuffer);
     }
 
     /**
@@ -191,5 +194,14 @@ public class Mesh {
 
             gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         }
+    }
+
+    public void dispose(GL4 gl4) {
+
+        gl4.glDeleteBuffers(Buffer.MAX, bufferName);
+        gl4.glDeleteVertexArrays(1, vertexArrayName);
+
+        BufferUtils.destroyDirectBuffer(bufferName);
+        BufferUtils.destroyDirectBuffer(vertexArrayName);
     }
 }

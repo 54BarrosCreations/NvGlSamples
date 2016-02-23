@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------
-// File:        gl4-kepler/BindlessApp/assets/shaders/simple_fragment.glsl
+// File:        gl4-kepler/BindlessApp/assets/shaders/simple_vertex.glsl
 // SDK Version: v2.11 
 // Email:       gameworks@nvidia.com
 // Site:        http://developer.nvidia.com/
@@ -31,23 +31,70 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //----------------------------------------------------------------------------------
-#version 420 compatibility
-#extension GL_NV_bindless_texture : require
-#extension GL_NV_gpu_shader5 : require // uint64_t
+#version 450
 
-layout(location=0) smooth in vec4  iColor;
-layout(location=1) flat in vec2  iUV;
-layout(location=0) out vec4 fragColor;
-uniform uint64_t samplers[256];
-uniform int useBindless;
-uniform int currentFrame;
+#define POSITION    0
+#define COLOR       1
+#define ATTRIB0     2
+#define ATTRIB1     3
+#define ATTRIB2     4
+#define ATTRIB3     5
+#define ATTRIB4     6
 
-void main() {
+#define TRANSFORM   0
+#define CONSTANT    1
+#define PER_MESH    2
 
-    sampler2D s = sampler2D(samplers[currentFrame]);
+#define BLOCK       0
 
-    if (useBindless > 0) 
-        fragColor = texture2D(s, iUV);
+layout(std140, column_major) uniform;
+
+// Input attributes
+layout (location = POSITION) in vec3 inPos;
+layout (location = COLOR) in vec4 inColor;
+layout (location = ATTRIB0) in vec4 inAttrib0;
+layout (location = ATTRIB1) in vec4 inAttrib1; 
+layout (location = ATTRIB2) in vec4 inAttrib2; 
+layout (location = ATTRIB3) in vec4 inAttrib3; 
+layout (location = ATTRIB4) in vec4 inAttrib4; 
+
+// Uniforms
+layout (binding = TRANSFORM) uniform Transform
+{
+    mat4 modelViewProjection;
+} transform;
+
+layout (binding = CONSTANT) uniform Constant
+{
+    int renderTexture;
+} constant;
+
+layout (binding = PER_MESH) uniform PerMesh
+{
+    vec4 color;
+    vec2 uv;
+} perMesh;
+
+uniform sampler2D texture_;
+
+// Outputs
+layout (location = BLOCK) out Block
+{
+    vec4 color; // smooth by default
+    flat vec2 uv;
+} outBlock;
+
+void main() 
+{
+    vec4 positionModelSpace = vec4(inPos, 1);
+
+    if (constant.renderTexture > 0) 
+        positionModelSpace.y += texture(texture_, perMesh.uv).g;
     else 
-        fragColor = iColor;
+        positionModelSpace.y += sin(positionModelSpace.y * perMesh.color.r) * .2f;
+
+    gl_Position = transform.modelViewProjection * positionModelSpace;
+
+    outBlock.color = vec4(inColor.rgb * perMesh.color.rgb, inColor.a);
+    outBlock.uv = perMesh.uv;
 }

@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jgli.Gl;
 import jgli.Load;
+import nvAppBase.BufferUtils;
 import nvAppBase.NvSampleApp;
 import nvAppBase.ProgramEntry;
 
@@ -33,7 +34,7 @@ import nvAppBase.ProgramEntry;
  */
 public class BindlessApp extends NvSampleApp {
 
-    private final int SQRT_BUILDING_COUNT = 100;
+    private final int SQRT_BUILDING_COUNT = 200;
     private final int TEXTURE_FRAME_COUNT = 180;
     private final float ANIMATION_DURATION = 5f;
 
@@ -58,6 +59,22 @@ public class BindlessApp extends NvSampleApp {
     private boolean updateUniformsEveryFrame = true;
     private boolean usePerMeshUniforms = true;
     private boolean renderTextures = true;
+    private boolean queryUniformsOnce = true;
+    private int[] unLoc;
+
+    private class Var {
+
+        public static final int MVP = 0;
+        public static final int USE_TEX = 1;
+        public static final int TEX = 2;
+        public static final int R = 3;
+        public static final int G = 4;
+        public static final int B = 5;
+        public static final int A = 6;
+        public static final int U = 7;
+        public static final int V = 8;
+        public static final int MAX = 9;
+    }
 
     // Timing related stuff
     private float t = 0.0f;
@@ -118,6 +135,25 @@ public class BindlessApp extends NvSampleApp {
         updatePerMeshUniforms(0.0f);
 
         checkError(gl4, "BindlessApp.initRendering()");
+
+        if (queryUniformsOnce) {
+
+            unLoc = new int[Var.MAX];
+
+            shader.enable(gl4);
+            {
+                unLoc[Var.MVP] = shader.getUniformLocation(gl4, "modelViewProjection");
+                unLoc[Var.USE_TEX] = shader.getUniformLocation(gl4, "renderTexture");
+                unLoc[Var.TEX] = shader.getUniformLocation(gl4, "texture_");
+                unLoc[Var.R] = shader.getUniformLocation(gl4, "r");
+                unLoc[Var.G] = shader.getUniformLocation(gl4, "g");
+                unLoc[Var.B] = shader.getUniformLocation(gl4, "b");
+                unLoc[Var.A] = shader.getUniformLocation(gl4, "a");
+                unLoc[Var.U] = shader.getUniformLocation(gl4, "u");
+                unLoc[Var.V] = shader.getUniformLocation(gl4, "v");
+            }
+            shader.disable(gl4);
+        }
     }
 
     /**
@@ -294,11 +330,8 @@ public class BindlessApp extends NvSampleApp {
         for (int i = 0; i < TEXTURE_FRAME_COUNT; i++) {
 
             try {
-//                textureName[i] = NvImage.uploadTextureFromDDSFile(gl4, "/gl4_kepler/bindlessApp/textures/NV"
-//                        + i + "." + TextureIO.DDS);
-
                 jgli.Texture texture = Load.load("/gl4_kepler/bindlessApp/textures/NV" + i + ".dds");
-
+                
                 gl4.glActiveTexture(GL_TEXTURE0);
                 gl4.glBindTexture(GL_TEXTURE_2D, textureName.get(i));
                 gl4.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
@@ -337,14 +370,20 @@ public class BindlessApp extends NvSampleApp {
             Mat4 mvMat = transformer.getModelViewMat();
             Mat4 mvpMat = projectionMat.mul_(mvMat);
             mvpMatBuffer.put(mvpMat.toFa_()).rewind();
-            gl4.glUniformMatrix4fv(shader.getUniformLocation(gl4, "modelViewProjection"), 1, false, mvpMatBuffer);
+            gl4.glUniformMatrix4fv(
+                    queryUniformsOnce ? unLoc[Var.MVP] : shader.getUniformLocation(gl4, "modelViewProjection"),
+                    1, false, mvpMatBuffer);
         }
 
-        gl4.glUniform1i(shader.getUniformLocation(gl4, "useTexture"), renderTextures ? 1 : 0);
+        gl4.glUniform1i(
+                queryUniformsOnce ? unLoc[Var.USE_TEX] : shader.getUniformLocation(gl4, "useTexture"),
+                renderTextures ? 1 : 0);
         if (renderTextures) {
             gl4.glActiveTexture(GL_TEXTURE0);
             gl4.glBindTexture(GL_TEXTURE_2D, textureName.get(currentFrame));
-            gl4.glUniform1i(shader.getUniformLocation(gl4, "texture_"), 0);
+            gl4.glUniform1i(
+                    queryUniformsOnce ? unLoc[Var.TEX] : shader.getUniformLocation(gl4, "texture_"),
+                    0);
         }
 
         // If we are going to update the uniforms every frame, do it now
@@ -367,12 +406,24 @@ public class BindlessApp extends NvSampleApp {
 
         if (!usePerMeshUniforms) {
 
-            gl4.glUniform1f(shader.getUniformLocation(gl4, "r"), perMesh[0].r);
-            gl4.glUniform1f(shader.getUniformLocation(gl4, "g"), perMesh[0].g);
-            gl4.glUniform1f(shader.getUniformLocation(gl4, "b"), perMesh[0].b);
-            gl4.glUniform1f(shader.getUniformLocation(gl4, "a"), perMesh[0].a);
-            gl4.glUniform1f(shader.getUniformLocation(gl4, "u"), perMesh[0].u);
-            gl4.glUniform1f(shader.getUniformLocation(gl4, "v"), perMesh[0].v);
+            gl4.glUniform1f(
+                    queryUniformsOnce ? unLoc[Var.R] : shader.getUniformLocation(gl4, "r"), 
+                    perMesh[0].r);
+            gl4.glUniform1f(
+                    queryUniformsOnce ? unLoc[Var.G] : shader.getUniformLocation(gl4, "g"), 
+                    perMesh[0].g);
+            gl4.glUniform1f(
+                    queryUniformsOnce ? unLoc[Var.B] : shader.getUniformLocation(gl4, "b"), 
+                    perMesh[0].b);
+            gl4.glUniform1f(
+                    queryUniformsOnce ? unLoc[Var.A] : shader.getUniformLocation(gl4, "a"), 
+                    perMesh[0].a);
+            gl4.glUniform1f(
+                    queryUniformsOnce ? unLoc[Var.U] : shader.getUniformLocation(gl4, "u"), 
+                    perMesh[0].u);
+            gl4.glUniform1f(
+                    queryUniformsOnce ? unLoc[Var.V] : shader.getUniformLocation(gl4, "v"), 
+                    perMesh[0].v);
         }
 
         // Render all of the meshes
@@ -413,6 +464,18 @@ public class BindlessApp extends NvSampleApp {
         projectionMat = glm.perspective_(45f * 2f * (float) Math.PI / 360f, (float) width / height, .1f, 10f);
 
         checkError(gl4, "BindlessApp.reshape");
+    }
+
+    @Override
+    public void shutdownRendering(GL4 gl4) {
+
+        gl4.glDeleteProgram(shader.programName);
+        gl4.glDeleteTextures(TEXTURE_FRAME_COUNT, textureName);
+        for (Mesh meshe : meshes) {
+            meshe.dispose(gl4);
+        }
+        BufferUtils.destroyDirectBuffer(textureName);
+        BufferUtils.destroyDirectBuffer(mvpMatBuffer);
     }
 
     private boolean requireExtension(GL4 gl4, String ext) {

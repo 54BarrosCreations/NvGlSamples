@@ -47,7 +47,7 @@ smooth out vec4 color;
 flat out vec2 uv;
 
 // Uniforms
-uniform int useTexture;
+uniform int renderTexture;
 
 uniform mat4 modelViewProjection;
 
@@ -64,19 +64,15 @@ void main()
 {
     vec4 positionModelSpace = vec4(inPos, 1);
 
-    if (useTexture > 0) 
+    if (renderTexture > 0) 
         positionModelSpace.y += texture(texture_, vec2(u, v)).g;
     else 
         positionModelSpace.y += sin(positionModelSpace.y * r) * .2f;
 
     gl_Position = modelViewProjection * positionModelSpace;
 
-    color.r = inColor.r * r;
-    color.g = inColor.g * g;
-    color.b = inColor.b * b;
-    color.a = inColor.a;
-    uv.x = u;
-    uv.y = v;
+    color = vec4(inColor.rgb * vec3(r, g, b), inColor.a);
+    uv = vec2(u, v);
 
     //gl_Position = modelViewProjection * vec4(0.1 * float(gl_VertexID % 2), 0.1 * float(gl_VertexID / 2), 0.0, 1.0);
 }

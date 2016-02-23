@@ -10,6 +10,7 @@ import com.jogamp.newt.NewtFactory;
 import com.jogamp.newt.Screen;
 import com.jogamp.newt.opengl.GLWindow;
 import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLContext;
 import com.jogamp.opengl.GLProfile;
 import com.jogamp.opengl.util.Animator;
 
@@ -31,7 +32,7 @@ public abstract class ProgramEntry {
     public static Animator animator;
     private NvAppBase app;
 
-    public ProgramEntry (String[] args) {
+    public ProgramEntry(String[] args) {
 
         Display display = NewtFactory.createDisplay(null);
         Screen screen = NewtFactory.createScreen(display, screenIdx);
@@ -51,9 +52,14 @@ public abstract class ProgramEntry {
         app = nvAppFactory(defaultWidth, defaultHeight);
         glWindow.addGLEventListener(app);
         glWindow.addKeyListener(app);
+        
+        glWindow.setContextCreationFlags(GLContext.CTX_OPTION_DEBUG);
 
         glWindow.setTitle(app.getTitle());
         glWindow.setVisible(true);
+        
+        glWindow.getContext().addGLDebugListener(new GlDebugOutput());
+        
         animator = new Animator(glWindow);
         animator.setRunAsFastAsPossible(true);
         animator.setUpdateFPSFrames(100, System.out);
