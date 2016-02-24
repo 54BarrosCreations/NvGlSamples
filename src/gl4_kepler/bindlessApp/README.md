@@ -47,7 +47,7 @@ Features:
 
 - condensing `perMesh` values allocating the maximum as possible for the ubo
 
-~ 40.5 fps
+~ 43.1 fps
 
 ### Version 3
 
