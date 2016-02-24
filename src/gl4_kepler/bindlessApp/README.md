@@ -32,10 +32,30 @@ Fastest:
     private boolean updateUniformsEveryFrame = true;
     private boolean usePerMeshUniforms = true;
     private boolean renderTextures = false;
+    private boolean mapBuffers = false;
 
-    public static boolean useVertexArray = false;
+    public static boolean useVertexArray = true;
     public static boolean useHeavyVertexFormat = false;
     public static boolean setVertexFormatOnEveryDrawCall = false;
 ```
 
-~ 40.2 fps
+~ 41.4 fps
+
+### Version 2
+
+Features:
+
+- condensing `perMesh` values allocating the maximum as possible for the ubo
+
+~ 40.5 fps
+
+### Version 3
+
+Features:
+
+- https://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-AsynchronousBufferTransfers.pdf, 
+- round robin fashion
+- 40k UBOs
+
+~ 40.5 fps
+
