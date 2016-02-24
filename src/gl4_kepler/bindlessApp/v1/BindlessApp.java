@@ -48,7 +48,7 @@ public class BindlessApp extends NvSampleApp {
     // uniform buffer object (UBO) for tranform data
     private Mat4 projectionMat;
     private ByteBuffer transformPointer = GLBuffers.newDirectByteBuffer(Mat4.SIZE);
-    private ByteBuffer perMeshPointer = GLBuffers.newDirectByteBuffer(Vec4.SIZE + Vec2.SIZE);
+    private ByteBuffer perMeshPointer = GLBuffers.newDirectByteBuffer(PerMesh.SIZE);
     private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
     private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1);
 
@@ -64,7 +64,6 @@ public class BindlessApp extends NvSampleApp {
     private boolean updateUniformsEveryFrame = true;
     private boolean usePerMeshUniforms = true;
     private boolean renderTextures = false;
-    private boolean mapBuffers = false;
 
     // Timing related stuff
     private float t = 0.0f;
@@ -169,7 +168,7 @@ public class BindlessApp extends NvSampleApp {
 
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.PER_MESH));
         {
-            int uniformBlockSize = Math.max(Vec4.SIZE + Vec2.SIZE, uniformBufferOffset.get(0));
+            int uniformBlockSize = Math.max(PerMesh.SIZE, uniformBufferOffset.get(0));
             gl4.glBufferData(GL_UNIFORM_BUFFER, uniformBlockSize, null, GL_DYNAMIC_DRAW);
         }
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -390,24 +389,12 @@ public class BindlessApp extends NvSampleApp {
         // Set the transformation matrices up
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.TRANSFORM));
         {
-            if (mapBuffers) {
-
-                transformPointer = gl4.glMapBufferRange(
-                        GL_UNIFORM_BUFFER, 0, Mat4.SIZE,
-                        GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-            }
-
             Mat4 mvMat = transformer.getModelViewMat();
             Mat4 mvpMat = projectionMat.mul_(mvMat);
 
             transformPointer.asFloatBuffer().put(mvpMat.toFa_());
 
-            if (mapBuffers) {
-                // Make sure the uniform buffer is uploaded
-                gl4.glUnmapBuffer(GL_UNIFORM_BUFFER);
-            } else {
-                gl4.glBufferSubData(GL_UNIFORM_BUFFER, 0, Mat4.SIZE, transformPointer);
-            }
+            gl4.glBufferSubData(GL_UNIFORM_BUFFER, 0, Mat4.SIZE, transformPointer);
         }
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -441,18 +428,9 @@ public class BindlessApp extends NvSampleApp {
         if (!usePerMeshUniforms) {
             gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.PER_MESH));
             {
-                if (mapBuffers) {
-                    perMeshPointer = gl4.glMapBufferRange(
-                            GL_UNIFORM_BUFFER, 0, Vec4.SIZE + Vec2.SIZE,
-                            GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-                }
                 perMeshPointer.asFloatBuffer().put(perMesh[0].toFa());
-                if (mapBuffers) {
-                    // Make sure the uniform buffer is uploaded
-                    gl4.glUnmapBuffer(GL_UNIFORM_BUFFER);
-                } else {
-                    gl4.glBufferSubData(GL_UNIFORM_BUFFER, 0, Vec4.SIZE + Vec2.SIZE, perMeshPointer);
-                }
+
+                gl4.glBufferSubData(GL_UNIFORM_BUFFER, 0, PerMesh.SIZE, perMeshPointer);
             }
             gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
         }
@@ -473,18 +451,9 @@ public class BindlessApp extends NvSampleApp {
             if (usePerMeshUniforms) {
                 gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.PER_MESH));
                 {
-                    if (mapBuffers) {
-                        perMeshPointer = gl4.glMapBufferRange(
-                                GL_UNIFORM_BUFFER, 0, Vec4.SIZE + Vec2.SIZE,
-                                GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-                    }
                     perMeshPointer.asFloatBuffer().put(perMesh[i].toFa());
-                    if (mapBuffers) {
-                        // Make sure the uniform buffer is uploaded
-                        gl4.glUnmapBuffer(GL_UNIFORM_BUFFER);
-                    } else {
-                        gl4.glBufferSubData(GL_UNIFORM_BUFFER, 0, Vec4.SIZE + Vec2.SIZE, perMeshPointer);
-                    }
+                    
+                    gl4.glBufferSubData(GL_UNIFORM_BUFFER, 0, PerMesh.SIZE, perMeshPointer);
                 }
                 gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
             }

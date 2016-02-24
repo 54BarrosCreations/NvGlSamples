@@ -3,20 +3,21 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package gl4_kepler.bindlessApp.v2;
+package gl4_kepler.bindlessApp.v5;
 
 import com.jogamp.newt.event.KeyEvent;
-import static com.jogamp.opengl.GL.GL_MAP_INVALIDATE_BUFFER_BIT;
-import static com.jogamp.opengl.GL.GL_MAP_WRITE_BIT;
+import static com.jogamp.opengl.GL.GL_DYNAMIC_DRAW;
 import static com.jogamp.opengl.GL2ES3.GL_UNIFORM_BUFFER;
 import static com.jogamp.opengl.GL2GL3.*;
+import static com.jogamp.opengl.GL3ES3.GL_SYNC_GPU_COMMANDS_COMPLETE;
+import static com.jogamp.opengl.GL3ES3.GL_TIMEOUT_EXPIRED;
+import static com.jogamp.opengl.GL3ES3.GL_WAIT_FAILED;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import glm.glm;
 import glm.mat._4.Mat4;
 import glm.vec._2.Vec2;
 import glm.vec._3.Vec3;
-import glm.vec._4.Vec4;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -48,8 +49,9 @@ public class BindlessApp extends NvSampleApp {
     // uniform buffer object (UBO) for tranform data
     private Mat4 projectionMat;
     private ByteBuffer transformPointer = GLBuffers.newDirectByteBuffer(Mat4.SIZE);
-    private ByteBuffer perMeshRowPointer;
+    private ByteBuffer perMeshPointer = GLBuffers.newDirectByteBuffer(PerMesh.SIZE);
     private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
+    private IntBuffer perMeshBufferName;
     private IntBuffer vertexArrayName = GLBuffers.newDirectIntBuffer(1);
 
     // uniform buffer object (UBO) for mesh param data
@@ -71,15 +73,13 @@ public class BindlessApp extends NvSampleApp {
 
     private FloatBuffer clearColor = GLBuffers.newDirectFloatBuffer(new float[]{0.5f, 0.5f, 0.5f, 1.0f});
     private FloatBuffer clearDepth = GLBuffers.newDirectFloatBuffer(new float[]{1.0f});
-    private int perMeshAlignment;
-    private int perMeshMaxSize;
-    private int perMeshMaxElements;
+
+    private long[] fences;
 
     private class Buffer {
 
         public static final int TRANSFORM = 0;
         public static final int CONSTANT = 1;
-        public static final int PER_MESH = 2;
         public static final int MAX = 3;
     }
 
@@ -93,7 +93,7 @@ public class BindlessApp extends NvSampleApp {
     public void initRendering(GL4 gl4) {
 
         // Create our pixel and vertex shader
-        shader = NvGLSLProgram.createFromFiles(gl4, "src/gl4_kepler/bindlessApp/v2/shaders", "v2");
+        shader = NvGLSLProgram.createFromFiles(gl4, "src/gl4_kepler/bindlessApp/v5/shaders", "v5");
         // Set the initial view
         transformer.setRotationVec(new Vec3((float) Math.toRadians(30.0f), (float) Math.toRadians(30.0f), 0.0f));
 
@@ -134,15 +134,19 @@ public class BindlessApp extends NvSampleApp {
             initTextures(gl4);
         }
 
-        // Initialize the per mesh Uniforms
-        updatePerMeshUniforms(0.0f);
-
         initBuffers(gl4);
+
+        // Initialize the per mesh Uniforms
+        updatePerMeshUniforms(gl4, 0.0f);
 
         if (Mesh.useVertexArray && !Mesh.setVertexFormatOnEveryDrawCall) {
             gl4.glGenVertexArrays(1, vertexArrayName);
         }
 
+        gl4.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, null, false);
+        gl4.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, null, true);
+        gl4.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, null, true);
+        
         checkError(gl4, "BindlessApp.initRendering()");
     }
 
@@ -152,7 +156,6 @@ public class BindlessApp extends NvSampleApp {
 
         IntBuffer uniformBufferOffset = GLBuffers.newDirectIntBuffer(1);
         gl4.glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, uniformBufferOffset);
-        System.out.println("GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT: " + uniformBufferOffset.get(0));
 
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.TRANSFORM));
         {
@@ -170,20 +173,17 @@ public class BindlessApp extends NvSampleApp {
         }
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.PER_MESH));
-        {
-            perMeshAlignment = Math.max(PerMesh.SIZE, uniformBufferOffset.get(0));
-            IntBuffer maxSize = GLBuffers.newDirectIntBuffer(1);
-            gl4.glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, maxSize);
-            perMeshMaxSize = maxSize.get(0);
-            perMeshMaxElements = perMeshMaxSize / perMeshAlignment;
-            BufferUtils.destroyDirectBuffer(maxSize);
-            System.out.println("GL_MAX_UNIFORM_BLOCK_SIZE: " + perMeshMaxSize);
-            System.out.println("perMeshAlignment: " + perMeshAlignment);
-            gl4.glBufferData(GL_UNIFORM_BUFFER, perMeshMaxSize, null, GL_DYNAMIC_DRAW);
-            perMeshRowPointer = GLBuffers.newDirectByteBuffer(perMeshMaxSize);
+        int uniformBlockSize = Math.max(PerMesh.SIZE, uniformBufferOffset.get(0));
+        perMeshBufferName = GLBuffers.newDirectIntBuffer(meshes.length);
+        fences = new long[meshes.length];
+        gl4.glGenBuffers(meshes.length, perMeshBufferName);
+        for (int i = 0; i < meshes.length; i++) {
+            gl4.glBindBuffer(GL_UNIFORM_BUFFER, perMeshBufferName.get(i));
+            {
+                gl4.glBufferData(GL_UNIFORM_BUFFER, uniformBlockSize, null, GL_DYNAMIC_DRAW);
+            }
+            gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
         }
-        gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         BufferUtils.destroyDirectBuffer(uniformBufferOffset);
     }
@@ -191,7 +191,7 @@ public class BindlessApp extends NvSampleApp {
     /**
      * Computes per mesh uniforms based on t.
      */
-    private void updatePerMeshUniforms(float t) {
+    private void updatePerMeshUniforms(GL4 gl4, float t) {
 
         // If we're using per mesh uniforms, compute the values for the uniforms for all of the meshes and
         // give the data to the GPU.
@@ -202,6 +202,8 @@ public class BindlessApp extends NvSampleApp {
             perMesh[0].g = 1.0f;
             perMesh[0].b = 1.0f;
             perMesh[0].a = 0.0f;
+
+            updateBuffer(gl4, 0);
 
             // Compute the per mesh uniforms for all of the "building" meshes
             int index = 1;
@@ -219,6 +221,8 @@ public class BindlessApp extends NvSampleApp {
                     perMesh[index].a = 0.0f;
                     perMesh[index].u = (float) j / SQRT_BUILDING_COUNT;
                     perMesh[index].v = 1 - (float) i / SQRT_BUILDING_COUNT;
+
+                    updateBuffer(gl4, index);
                 }
             }
         } else {
@@ -228,6 +232,15 @@ public class BindlessApp extends NvSampleApp {
             perMesh[0].b = 1.0f;
             perMesh[0].a = 0.0f;
         }
+    }
+
+    private void updateBuffer(GL4 gl4, int i) {
+        gl4.glBindBuffer(GL_UNIFORM_BUFFER, perMeshBufferName.get(i));
+        {
+            perMeshPointer.asFloatBuffer().put(perMesh[i].toFa());
+            gl4.glBufferSubData(GL_UNIFORM_BUFFER, 0, PerMesh.SIZE, perMeshPointer);
+        }
+        gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
     /**
@@ -434,17 +447,26 @@ public class BindlessApp extends NvSampleApp {
             dt = Math.min(0.00005f / minimumFrameDeltaTime, .01f);
             t += dt * Mesh.drawCallsPerState;
 
-            updatePerMeshUniforms(t);
+            updatePerMeshUniforms(gl4, t);
         }
 
         if (!usePerMeshUniforms) {
-            gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.PER_MESH));
-            {
-                perMeshRowPointer.asFloatBuffer().put(perMesh[0].toFa());
-
-                gl4.glBufferSubData(GL_UNIFORM_BUFFER, 0, PerMesh.SIZE, perMeshRowPointer);
-            }
-            gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
+//            gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.PER_MESH));
+//            {
+//                if (mapBuffers) {
+//                    perMeshPointer = gl4.glMapBufferRange(
+//                            GL_UNIFORM_BUFFER, 0, PerMesh.SIZE,
+//                            GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+//                }
+//                perMeshPointer.asFloatBuffer().put(perMesh[0].toFa());
+//                if (mapBuffers) {
+//                    // Make sure the uniform buffer is uploaded
+//                    gl4.glUnmapBuffer(GL_UNIFORM_BUFFER);
+//                } else {
+//                    gl4.glBufferSubData(GL_UNIFORM_BUFFER, 0, PerMesh.SIZE, perMeshPointer);
+//                }
+//            }
+//            gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
         }
 
         if (Mesh.useVertexArray && !Mesh.setVertexFormatOnEveryDrawCall) {
@@ -458,31 +480,38 @@ public class BindlessApp extends NvSampleApp {
         // Render all of the meshes
         for (int i = 0; i < meshes.length; i++) {
 
-            int element = i % perMeshMaxElements;
             // If enabled, update the per mesh uniforms for each mesh rendered
             if (usePerMeshUniforms) {
-
-                if (element == 0) {
-                    for (int j = 0; j < perMeshMaxElements && (i + j) < meshes.length; j++) {
-//                        System.out.println("capacity: " + perMeshRowPointer.capacity() + ", position: " + (perMeshAlignment * j));
-                        perMeshRowPointer.position(perMeshAlignment * j);
-                        perMeshRowPointer.asFloatBuffer().put(perMesh[i + j].toFa());
+//                gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.PER_MESH));
+//                {
+//                    if (mapBuffers) {
+//                        perMeshPointer = gl4.glMapBufferRange(
+//                                GL_UNIFORM_BUFFER, 0, PerMesh.SIZE,
+//                                GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+//                    }
+//                    perMeshPointer.asFloatBuffer().put(perMesh[i].toFa());
+//                    if (mapBuffers) {
+//                        // Make sure the uniform buffer is uploaded
+//                        gl4.glUnmapBuffer(GL_UNIFORM_BUFFER);
+//                    } else {
+//                        gl4.glBufferSubData(GL_UNIFORM_BUFFER, 0, PerMesh.SIZE, perMeshPointer);
+//                    }
+//                }
+//                gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
+                if (fences[i] > 0) {
+                    int result = gl4.glClientWaitSync(fences[i], 0, 1);
+                    if (result == GL_TIMEOUT_EXPIRED || result == GL_WAIT_FAILED) {
+                        System.out.println("Something is wrong, you will die in 7 days");
                     }
-                    perMeshRowPointer.rewind();
-
-                    gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.PER_MESH));
-                    {
-                        gl4.glBufferSubData(GL_UNIFORM_BUFFER,
-                                0, // offset 
-                                perMeshMaxSize, // size
-                                perMeshRowPointer);
-                    }
-                    gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
+                    gl4.glDeleteSync(fences[i]);
                 }
+                gl4.glBindBuffer(GL_UNIFORM_BUFFER, perMeshBufferName.get(i));
+                perMeshPointer = gl4.glMapBufferRange(GL_UNIFORM_BUFFER, 
+                        0, // offset
+                        PerMesh.SIZE, // size
+                        GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT); // flags
+                gl4.glUnmapBuffer(GL_UNIFORM_BUFFER);
             }
-            gl4.glBindBufferRange(GL_UNIFORM_BUFFER, Semantic.Uniform.PER_MESH, bufferName.get(Buffer.PER_MESH),
-                    element * perMeshAlignment,
-                    PerMesh.SIZE);
 
             if (Mesh.setVertexFormatOnEveryDrawCall) {
                 meshes[i].renderPrep(gl4);
@@ -495,6 +524,8 @@ public class BindlessApp extends NvSampleApp {
             if (Mesh.setVertexFormatOnEveryDrawCall) {
                 Mesh.renderFinish(gl4);
             }
+            
+            fences[i] = gl4.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
         }
 
         if (!Mesh.setVertexFormatOnEveryDrawCall) {
@@ -537,7 +568,7 @@ public class BindlessApp extends NvSampleApp {
         BufferUtils.destroyDirectBuffer(bufferName);
         BufferUtils.destroyDirectBuffer(clearColor);
         BufferUtils.destroyDirectBuffer(clearDepth);
-        BufferUtils.destroyDirectBuffer(perMeshRowPointer);
+        BufferUtils.destroyDirectBuffer(perMeshPointer);
         BufferUtils.destroyDirectBuffer(transformPointer);
         BufferUtils.destroyDirectBuffer(vertexArrayName);
     }
