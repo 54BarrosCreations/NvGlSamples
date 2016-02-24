@@ -8,7 +8,6 @@ Features:
     private boolean updateUniformsEveryFrame = false;
     private boolean usePerMeshUniforms = false;
     private boolean renderTextures = false;
-    private boolean mapBuffers = false;
 
     public static boolean useVertexArray = false;
     public static boolean useHeavyVertexFormat = false;
@@ -83,7 +82,6 @@ Features:
     private boolean updateUniformsEveryFrame = true;
     private boolean usePerMeshUniforms = true;
     private boolean renderTextures = true;
-    private boolean mapBuffers = false;
 
     public static boolean useVertexArray = true;
     public static boolean useHeavyVertexFormat = false;
@@ -95,16 +93,3 @@ Features:
 Same but passing the `renderTexture` via block instead declaring the same `constant` UBO also in the fragment shader
 
 ~ 40.4 fps
-
-```java
-    private boolean updateUniformsEveryFrame = true;
-    private boolean usePerMeshUniforms = true;
-    private boolean renderTextures = false;
-    private boolean mapBuffers = true;
-
-    public static boolean useVertexArray = true;
-    public static boolean useHeavyVertexFormat = false;
-    public static boolean setVertexFormatOnEveryDrawCall = false;
-```
-
-~ 21.5 fps
