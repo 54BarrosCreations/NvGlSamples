@@ -53,9 +53,22 @@ Features:
 
 Features:
 
-- https://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-AsynchronousBufferTransfers.pdf, 
+- https://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-AsynchronousBufferTransfers.pdf
 - round robin fashion
 - 40k UBOs
 
 ~ 40.5 fps
+
+### Version 4
+
+Features:
+
+- https://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-AsynchronousBufferTransfers.pdf
+- orphaning with `glBufferData` and `null`
+
+~ 40.4 fps
+
+- orphaning with `glMapBufferRange` and `GL_MAP_INVALIDATE_BUFFER_BIT`
+
+~ 20.6 fps
 
