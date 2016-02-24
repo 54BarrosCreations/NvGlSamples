@@ -47,7 +47,7 @@ import nvAppBase.ProgramEntry;
  */
 public class BindlessApp extends NvSampleApp {
 
-    private final int SQRT_BUILDING_COUNT = 150;
+    private final int SQRT_BUILDING_COUNT = 200;
     private final int TEXTURE_FRAME_COUNT = 180;
     private final float ANIMATION_DURATION = 5f;
 
@@ -474,11 +474,6 @@ public class BindlessApp extends NvSampleApp {
 
             // If enabled, update the per mesh uniforms for each mesh rendered
             if (usePerMeshUniforms) {
-
-//                perMeshPointer = gl4.glMapBufferRange(GL_UNIFORM_BUFFER, //target
-//                        rbAlignment * rbMapIndex, // offset
-//                        rbAlignment, // length
-//                        rbMapAccess); // access
                 //Wait until the gpu is no longer using the buffer
                 waitBuffer(gl4, rbWriteIndex);
                 {
@@ -507,11 +502,11 @@ public class BindlessApp extends NvSampleApp {
             }
             meshes[i].renderFinish(gl4);
             //Place a fence which will be removed when the draw command has finished            
-            lockBuffer(gl4, rbBindIndex);
+            lockBuffer(gl4, rbWriteIndex);
 
 //            lockBuffer(gl4);
             rbBindIndex = (rbBindIndex + 1) % rbMax;
-            rbWriteIndex = (rbBindIndex + 1) % rbMax;
+            rbWriteIndex = (rbBindIndex + 2) % rbMax;
         }
 
         // Disable the vertex and pixel shader
