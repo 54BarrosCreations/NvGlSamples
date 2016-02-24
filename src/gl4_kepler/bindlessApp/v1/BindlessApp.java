@@ -63,7 +63,6 @@ public class BindlessApp extends NvSampleApp {
     private ByteBuffer perMeshPointer;
 //    private ByteBuffer perMeshPointer = GLBuffers.newDirectByteBuffer(Vec4.SIZE + Vec2.SIZE);
     private IntBuffer bufferName = GLBuffers.newDirectIntBuffer(Buffer.MAX);
-    private long syncName;
 
     // uniform buffer object (UBO) for mesh param data
     private PerMesh[] perMesh;
@@ -92,8 +91,12 @@ public class BindlessApp extends NvSampleApp {
         public static final int PER_MESH = 2;
         public static final int MAX = 3;
     }
-    
-    private int ringBufferSize = 3;
+
+    private int rbMax = 3;
+    private int rbAlignment;
+    private int rbBindIndex;
+    private int rbWriteIndex;    
+    private long[] syncName = new long[rbMax];
 
     public BindlessApp(int width, int height) {
         super("BindlessApp");
@@ -146,10 +149,10 @@ public class BindlessApp extends NvSampleApp {
             initTextures(gl4);
         }
 
-        initBuffers(gl4);
-
         // Initialize the per mesh Uniforms
         updatePerMeshUniforms(0.0f);
+
+        initBuffers(gl4);
 
         checkError(gl4, "BindlessApp.initRendering()");
     }
@@ -182,15 +185,29 @@ public class BindlessApp extends NvSampleApp {
 
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.PER_MESH));
         {
-            int uniformBlockSize = Math.max(Vec4.SIZE + Vec2.SIZE, uniformBufferOffset.get(0));
-            gl4.glBufferStorage(GL_UNIFORM_BUFFER, uniformBlockSize, null, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT
-                    | GL_MAP_COHERENT_BIT);
+            rbAlignment = Math.max(Vec4.SIZE + Vec2.SIZE, uniformBufferOffset.get(0));
+            gl4.glBufferStorage(GL_UNIFORM_BUFFER, rbAlignment * rbMax, null, GL_MAP_WRITE_BIT
+                    | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+//            perMeshPointer = gl4.glMapBufferRange(GL_UNIFORM_BUFFER, 0, Vec4.SIZE + Vec2.SIZE, GL_MAP_WRITE_BIT
+//                    | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+            perMeshPointer = gl4.glMapBufferRange(GL_UNIFORM_BUFFER, 0, rbAlignment * rbMax, GL_MAP_WRITE_BIT
+                    | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+            {
+                perMeshPointer.position(rbAlignment * 0);
+                perMeshPointer.asFloatBuffer().put(perMesh[0].toFa());
+                perMeshPointer.position(rbAlignment * 1);
+                perMeshPointer.asFloatBuffer().put(perMesh[0].toFa());
+                perMeshPointer.position(rbAlignment * 2);
+                perMeshPointer.asFloatBuffer().put(perMesh[0].toFa());
+                perMeshPointer.rewind();
+            }
+            rbBindIndex = 0;
+            rbWriteIndex = 2;
 //            gl4.glBufferStorage(GL_UNIFORM_BUFFER, uniformBlockSize, null, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT
 //                    | GL_MAP_FLUSH_EXPLICIT_BIT);
-            perMeshPointer = gl4.glMapBufferRange(GL_UNIFORM_BUFFER, 0, Vec4.SIZE + Vec2.SIZE, GL_MAP_WRITE_BIT
-                    | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
 //            perMeshPointer = gl4.glMapBufferRange(GL_UNIFORM_BUFFER, 0, Vec4.SIZE + Vec2.SIZE, GL_MAP_WRITE_BIT
 //                    | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT );
+//
 //            gl4.glBufferData(GL_UNIFORM_BUFFER, uniformBlockSize, null, GL_DYNAMIC_DRAW);
         }
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -422,7 +439,7 @@ public class BindlessApp extends NvSampleApp {
             transformPointer.asFloatBuffer().put(mvpMat.toFa_());
         }
         gl4.glBindBufferBase(GL_UNIFORM_BUFFER, Semantic.Uniform.TRANSFORM, bufferName.get(Buffer.TRANSFORM));
-        gl4.glBindBufferBase(GL_UNIFORM_BUFFER, Semantic.Uniform.PER_MESH, bufferName.get(Buffer.PER_MESH));
+//        gl4.glBindBufferBase(GL_UNIFORM_BUFFER, Semantic.Uniform.PER_MESH, bufferName.get(Buffer.PER_MESH));
 
         if (renderTextures) {
             gl4.glActiveTexture(GL_TEXTURE0);
@@ -455,18 +472,34 @@ public class BindlessApp extends NvSampleApp {
         // Render all of the meshes
         for (int i = 0; i < meshes.length; i++) {
 
-            //Wait until the gpu is no longer using the buffer
-//            waitBuffer(gl4);
-
             // If enabled, update the per mesh uniforms for each mesh rendered
             if (usePerMeshUniforms) {
 
-                perMeshPointer.asFloatBuffer().put(perMesh[i].toFa());
+//                perMeshPointer = gl4.glMapBufferRange(GL_UNIFORM_BUFFER, //target
+//                        rbAlignment * rbMapIndex, // offset
+//                        rbAlignment, // length
+//                        rbMapAccess); // access
+                {
+                    perMeshPointer.position(rbAlignment * rbWriteIndex);
+                    perMeshPointer.asFloatBuffer().put(perMesh[i].toFa());
+                    perMeshPointer.rewind();
+                }
+
 //                gl4.glBufferSubData(GL_UNIFORM_BUFFER, 0, Vec4.SIZE + Vec2.SIZE, perMeshPointer);
 //                gl4.glMemoryBarrier(0xffffffff);
 //                gl4.glFlushMappedBufferRange(GL_UNIFORM_BUFFER, 0, PerMesh.SIZE);
-                gl4.glInvalidateBufferData(bufferName.get(Buffer.PER_MESH));
+//                gl4.glInvalidateBufferData(bufferName.get(Buffer.PER_MESH));
             }
+            
+            gl4.glBindBufferRange(GL_UNIFORM_BUFFER, // target
+                    Semantic.Uniform.PER_MESH, // index
+                    bufferName.get(Buffer.PER_MESH), // buffer
+                    rbAlignment * rbBindIndex, // offset
+                    rbAlignment // size
+            );
+            //Wait until the gpu is no longer using the buffer
+            waitBuffer(gl4, rbBindIndex);
+//            waitBuffer(gl4);
 
             meshes[i].renderPrep(gl4);
             {
@@ -474,8 +507,11 @@ public class BindlessApp extends NvSampleApp {
             }
             meshes[i].renderFinish(gl4);
 
-            //Place a fence wich will be removed when the draw command has finished
+            //Place a fence which will be removed when the draw command has finished
+            lockBuffer(gl4, rbWriteIndex);
 //            lockBuffer(gl4);
+            rbBindIndex = (rbBindIndex + 1) % rbMax;
+            rbWriteIndex = (rbBindIndex + 2) % rbMax;
         }
 
         // Disable the vertex and pixel shader
@@ -488,23 +524,40 @@ public class BindlessApp extends NvSampleApp {
         currentFrame = (int) (180.0f * currentTime / ANIMATION_DURATION);
     }
 
-    private void lockBuffer(GL4 gl4) {
-        if (syncName != 0) {
-            gl4.glDeleteSync(syncName);
+    private void lockBuffer(GL4 gl4, int index) {
+        if (syncName[index] != 0) {
+            gl4.glDeleteSync(syncName[index]);
         }
-        syncName = gl4.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        syncName[index] = gl4.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     }
 
-    private void waitBuffer(GL4 gl4) {
-        if (syncName != 0) {
+    private void waitBuffer(GL4 gl4, int index) {
+        if (syncName[index] != 0) {
             while (true) {
-                int waitReturn = gl4.glClientWaitSync(syncName, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
+                int waitReturn = gl4.glClientWaitSync(syncName[index], GL_SYNC_FLUSH_COMMANDS_BIT, 1);
                 if (waitReturn == GL_ALREADY_SIGNALED || waitReturn == GL_CONDITION_SATISFIED) {
                     return;
                 }
             }
         }
     }
+//    private void lockBuffer(GL4 gl4) {
+//        if (syncName != 0) {
+//            gl4.glDeleteSync(syncName);
+//        }
+//        syncName = gl4.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+//    }
+//
+//    private void waitBuffer(GL4 gl4) {
+//        if (syncName != 0) {
+//            while (true) {
+//                int waitReturn = gl4.glClientWaitSync(syncName, GL_SYNC_FLUSH_COMMANDS_BIT, 1);
+//                if (waitReturn == GL_ALREADY_SIGNALED || waitReturn == GL_CONDITION_SATISFIED) {
+//                    return;
+//                }
+//            }
+//        }
+//    }
 
     @Override
     public void reshape(GL4 gl4, int x, int y, int width, int height) {
