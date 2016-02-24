@@ -95,7 +95,7 @@ public class BindlessApp extends NvSampleApp {
     private int rbMax = 3;
     private int rbAlignment;
     private int rbBindIndex;
-    private int rbWriteIndex;    
+    private int rbWriteIndex;
     private long[] syncName = new long[rbMax];
 
     public BindlessApp(int width, int height) {
@@ -479,6 +479,8 @@ public class BindlessApp extends NvSampleApp {
 //                        rbAlignment * rbMapIndex, // offset
 //                        rbAlignment, // length
 //                        rbMapAccess); // access
+                //Wait until the gpu is no longer using the buffer
+                waitBuffer(gl4, rbWriteIndex);
                 {
                     perMeshPointer.position(rbAlignment * rbWriteIndex);
                     perMeshPointer.asFloatBuffer().put(perMesh[i].toFa());
@@ -490,28 +492,26 @@ public class BindlessApp extends NvSampleApp {
 //                gl4.glFlushMappedBufferRange(GL_UNIFORM_BUFFER, 0, PerMesh.SIZE);
 //                gl4.glInvalidateBufferData(bufferName.get(Buffer.PER_MESH));
             }
-            
+
             gl4.glBindBufferRange(GL_UNIFORM_BUFFER, // target
                     Semantic.Uniform.PER_MESH, // index
                     bufferName.get(Buffer.PER_MESH), // buffer
                     rbAlignment * rbBindIndex, // offset
                     rbAlignment // size
             );
-            //Wait until the gpu is no longer using the buffer
-            waitBuffer(gl4, rbBindIndex);
-//            waitBuffer(gl4);
 
+//            waitBuffer(gl4);
             meshes[i].renderPrep(gl4);
             {
                 meshes[i].render(gl4);
             }
             meshes[i].renderFinish(gl4);
+            //Place a fence which will be removed when the draw command has finished            
+            lockBuffer(gl4, rbBindIndex);
 
-            //Place a fence which will be removed when the draw command has finished
-            lockBuffer(gl4, rbWriteIndex);
 //            lockBuffer(gl4);
             rbBindIndex = (rbBindIndex + 1) % rbMax;
-            rbWriteIndex = (rbBindIndex + 2) % rbMax;
+            rbWriteIndex = (rbBindIndex + 1) % rbMax;
         }
 
         // Disable the vertex and pixel shader
