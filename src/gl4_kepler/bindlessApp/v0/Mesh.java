@@ -99,7 +99,7 @@ public class Mesh {
             }
             gl4.glBindVertexArray(0);
         }
-        
+
         BufferUtils.destroyDirectBuffer(vertexBuffer);
         BufferUtils.destroyDirectBuffer(elementBuffer);
     }
@@ -199,7 +199,9 @@ public class Mesh {
     public void dispose(GL4 gl4) {
 
         gl4.glDeleteBuffers(Buffer.MAX, bufferName);
-        gl4.glDeleteVertexArrays(1, vertexArrayName);
+        if (useVertexArray) {
+            gl4.glDeleteVertexArrays(1, vertexArrayName);
+        }
 
         BufferUtils.destroyDirectBuffer(bufferName);
         BufferUtils.destroyDirectBuffer(vertexArrayName);
