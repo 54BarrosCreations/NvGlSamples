@@ -88,6 +88,8 @@ public class BindlessApp extends NvSampleApp {
         public static final int PER_MESH = 2;
         public static final int MAX = 3;
     }
+    
+    private int ringBufferSize = 3;
 
     public BindlessApp(int width, int height) {
         super("BindlessApp");
