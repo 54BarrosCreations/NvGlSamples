@@ -77,3 +77,19 @@ Features:
 ```
 
 ~ 40.1 fps
+
+```java
+    private boolean updateUniformsEveryFrame = true;
+    private boolean usePerMeshUniforms = true;
+    private boolean renderTextures = true;
+
+    public static boolean useVertexArray = true;
+    public static boolean useHeavyVertexFormat = false;
+    public static boolean setVertexFormatOnEveryDrawCall = false;
+```
+
+~ 40.8 fps
+
+Same but passing the `renderTexture` via block instead declaring the same `constant` UBO also in the fragment shader
+
+~ 40.4 fps
