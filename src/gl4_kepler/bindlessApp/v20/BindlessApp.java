@@ -505,6 +505,8 @@ public class BindlessApp extends NvSampleApp {
             }
             //Place a fence which will be removed when the draw command has finished
             lockBuffer(gl4);
+            
+            rbId = rbId == (rbSize - 1) ? 0 : (rbId + 1);
         }
 
         if (!Mesh.setVertexFormatOnEveryDrawCall) {
@@ -519,8 +521,6 @@ public class BindlessApp extends NvSampleApp {
             currentTime = 0.0f;
         }
         currentFrame = (int) (180.0f * currentTime / ANIMATION_DURATION);
-
-        rbId = rbId == rbSize ? 0 : (rbId + 1);
     }
 
     private void waitBuffer(GL4 gl4) {
