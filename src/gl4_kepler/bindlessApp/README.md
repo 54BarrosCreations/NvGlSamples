@@ -111,7 +111,21 @@ Features:
 Features:
 
 - immutable storages
-- shader storage buffer objects (SSBO) 3 ring buffer
+- shader storage buffer objects (SSBO) ring buffer
 - synchronized with fences
+- http://www.bfilipek.com/2015/01/persistent-mapped-buffers-benchmark.html
+- https://github.com/nvMcJohn/apitest/blob/master/src/framework/bufferlock.cpp#L54
 
-~
+on 1 minute
+
+1 ring buffer, a lot of stalls
+
+~ 33.6 fps
+
+2 ring buffer, few stalls
+
+- 36.0 fps
+ 
+3 ring buffer, zero stalls
+
+- 37.7 fps
