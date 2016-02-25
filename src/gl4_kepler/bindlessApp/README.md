@@ -83,7 +83,7 @@ Features:
 Features:
 
 - https://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-AsynchronousBufferTransfers.pdf
-- unsynchronized with fences
+- synchronized with fences
 
 ~ broken
 
@@ -92,7 +92,26 @@ Features:
 Features:
 
 - immutable storages
-- unsynchronized with fences
-- http://stackoverflow.com/questions/35626947/opengl-why-so-much-performance-difference-between-driver-and-manual-synchroniza
+- synchronized with fences
 
 ~ 0.9 fps
+
+### Version 2.1
+
+Features:
+
+- immutable storages
+- shader storage buffer objects (SSBO)
+- synchronized with fences
+
+~ 35.8 fps
+
+### Version 2.2
+
+Features:
+
+- immutable storages
+- shader storage buffer objects (SSBO) 3 ring buffer
+- synchronized with fences
+
+~
