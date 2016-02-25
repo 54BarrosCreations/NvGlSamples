@@ -1,4 +1,4 @@
-### Version 0
+### Version 0.0
 
 Features:
 
@@ -19,7 +19,7 @@ Fastest:
 
 ~ 14.5 fps
 
-### Version 1
+### Version 1.0
 
 Features:
 
@@ -41,15 +41,21 @@ Fastest:
 
 ~ 41.4 fps
 
-### Version 2
+### Version 1.1
 
 Features:
 
-- condensing `perMesh` values allocating the maximum as possible for the ubo
+- condensing `perMesh` values allocating the maximum as possible for the ubo and setting a `perMesh` every alignment
 
 ~ 43.1 fps
 
-### Version 3
+### Version 1.2
+
+Features:
+
+- condensing even more `perMesh` values via an array of struct. To finish
+
+### Version 1.3
 
 Features:
 
@@ -59,7 +65,7 @@ Features:
 
 ~ 40.5 fps
 
-### Version 4
+### Version 1.4
 
 Features:
 
@@ -72,3 +78,11 @@ Features:
 
 ~ 20.6 fps
 
+### Version 1.5
+
+Features:
+
+- https://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-AsynchronousBufferTransfers.pdf
+- unsynchronized with fences
+
+~ broken
