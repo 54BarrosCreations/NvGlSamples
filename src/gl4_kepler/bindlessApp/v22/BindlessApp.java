@@ -222,7 +222,8 @@ public class BindlessApp extends NvSampleApp {
             perMesh[0].b = 1.0f;
             perMesh[0].a = 0.0f;
 
-            perMesh[0].toBb(perMeshPointer);
+            int offset = ((rbId + 1) % rbSectors) * rbSectorSize;
+            perMesh[0].toBb(offset, perMeshPointer);
             // Compute the per mesh uniforms for all of the "building" meshes
             int index = 1;
             for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
@@ -240,11 +241,10 @@ public class BindlessApp extends NvSampleApp {
                     perMesh[index].u = (float) j / SQRT_BUILDING_COUNT;
                     perMesh[index].v = 1 - (float) i / SQRT_BUILDING_COUNT;
 
-                    perMeshPointer.position(((rbId + 1) % rbSectors) * rbSectorSize + index * ssboBlockSize);
-                    perMesh[index].toBb(perMeshPointer);
+                    offset = ((rbId + 1) % rbSectors) * rbSectorSize + index * ssboBlockSize;
+                    perMesh[index].toBb(offset, perMeshPointer);
                 }
             }
-            perMeshPointer.rewind();
 
         } else {
             // All meshes will use these uniforms
@@ -536,7 +536,7 @@ public class BindlessApp extends NvSampleApp {
                 if (waitRet == GL_ALREADY_SIGNALED || waitRet == GL_CONDITION_SATISFIED) {
                     return;
                 }
-                System.out.println("stall");
+//                System.out.println("stall");
             }
         }
     }
