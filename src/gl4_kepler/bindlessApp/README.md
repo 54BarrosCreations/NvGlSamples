@@ -86,3 +86,13 @@ Features:
 - unsynchronized with fences
 
 ~ broken
+
+### Version 2.0
+
+Features:
+
+- immutable storages
+- unsynchronized with fences
+- http://stackoverflow.com/questions/35626947/opengl-why-so-much-performance-difference-between-driver-and-manual-synchroniza
+
+~ 0.9 fps
