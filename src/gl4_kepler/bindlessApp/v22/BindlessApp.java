@@ -76,7 +76,7 @@ public class BindlessApp extends NvSampleApp {
     private int ssboBlockSize;
     private int rbSize;
     private int rbSectorSize;
-    private int rbSectors = 2;
+    private int rbSectors = 3;
     private int rbId = 0;
     private long[] fence = new long[rbSectors];
 
@@ -525,18 +525,27 @@ public class BindlessApp extends NvSampleApp {
             currentTime = 0.0f;
         }
         currentFrame = (int) (180.0f * currentTime / ANIMATION_DURATION);
-        
+
         rbId = rbId == (rbSectors - 1) ? 0 : (rbId + 1);
     }
 
     private void waitBuffer(GL4 gl4) {
         if (fence[(rbId + 1) % rbSectors] > 0) {
+            int waitFlags = 0;
+            int waitDuration = 0;
             while (true) {
-                int waitRet = gl4.glClientWaitSync(fence[(rbId + 1) % rbSectors], GL_SYNC_FLUSH_COMMANDS_BIT, 1);
+                int waitRet = gl4.glClientWaitSync(fence[(rbId + 1) % rbSectors], waitFlags, waitDuration);
                 if (waitRet == GL_ALREADY_SIGNALED || waitRet == GL_CONDITION_SATISFIED) {
                     return;
                 }
-//                System.out.println("stall");
+                if (waitRet == GL_WAIT_FAILED) {
+                    System.out.println("Not sure what to do here. Probably fart an exception or suicide.");
+                    return;
+                }
+                System.out.println("stall");
+                // After the first time, need to start flushing, and wait for a looong time.
+                waitFlags = GL_SYNC_FLUSH_COMMANDS_BIT;
+                waitDuration = 1_000_000_000;
             }
         }
     }

@@ -48,11 +48,16 @@ layout (binding = CONSTANT) uniform Constant
     int renderTexture;
 } constant;
 
+struct PerMesh
+{
+    vec4 color;
+    vec2 uv;
+};
+
 // Inputs
 layout (location = BLOCK) in Block 
 {
-    vec4 color; // smooth by default
-    flat vec2 uv;
+    PerMesh perMesh;
 } inBlock;
 
 uniform sampler2D texture_;
@@ -62,7 +67,7 @@ layout (location = FRAG_COLOR) out vec4 fragColor;
 void main() {
 
     if (constant.renderTexture > 0) 
-        fragColor = texture(texture_, inBlock.uv);
+        fragColor = texture(texture_, inBlock.perMesh.uv);
     else 
-        fragColor = inBlock.color;
+        fragColor = inBlock.perMesh.color;
 }
