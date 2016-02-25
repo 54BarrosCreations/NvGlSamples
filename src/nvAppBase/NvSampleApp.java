@@ -124,7 +124,7 @@ public abstract class NvSampleApp extends NvAppBase {
 
         baseDraw(gl4);
 
-        checkError(gl4, "NvSampleApp.display()");
+//        checkError(gl4, "NvSampleApp.display()");
 
         drawable.swapBuffers();
     }
