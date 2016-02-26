@@ -124,7 +124,6 @@ public class BindlessApp extends NvSampleApp {
         // Create "building" meshes
         int meshIndex = 0;
         for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
-
             for (int k = 0; k < SQRT_BUILDING_COUNT; k++) {
 
                 float x, y, z;

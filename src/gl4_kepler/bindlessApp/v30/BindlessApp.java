@@ -154,7 +154,6 @@ public class BindlessApp extends NvSampleApp {
             int uniformBlockSize = Math.max(Mat4.SIZE, uniformBufferOffset.get(0));
             ByteBuffer buffer = GLBuffers.newDirectByteBuffer(Mat4.SIZE + Float.BYTES);
             buffer.asFloatBuffer().put(new Mat4().toFa_()).put(0.0f);
-            buffer.rewind();
             gl4.glBufferStorage(GL_UNIFORM_BUFFER,
                     uniformBlockSize,
                     buffer,

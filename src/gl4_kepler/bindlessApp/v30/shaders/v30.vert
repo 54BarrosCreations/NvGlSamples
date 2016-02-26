@@ -87,17 +87,15 @@ layout (location = BLOCK) out Block
     PerMesh perMesh;
 } outBlock;
 
-PerMesh updatePerMesh()
+PerMesh calculatePerMesh()
 {
     PerMesh perMesh;
 
     if(inMeshId == 0)
     {
         // Update uniforms for the "ground" mesh
-        perMesh.color.r = 1.0f;
-        perMesh.color.g = 1.0f;
-        perMesh.color.b = 1.0f;
-        perMesh.color.a = 0.0f;
+        perMesh.color = vec4(1, 1, 1, 0);
+        perMesh.uv = vec2(0.0f, 0.0f);
     } 
     else
     {
