@@ -129,3 +129,21 @@ on 1 minute
 3 ring buffer, zero stalls
 
 - 37.7 fps
+
+### Version 2.3
+
+Features:
+
+- `GL_UNIFORM_BUFFER` immutable storages `constant` and `transform`
+- `GL_ARRAY_BUFFER` mutable storage `perMeshPointer` -> `glBufferSubData`
+
+~ 50.3 fps
+
+### Version 2.4
+
+Features:
+
+- `GL_UNIFORM_BUFFER` and `GL_ARRAY_BUFFER` immutable storages
+- 3 ring buffer
+
+~ 50.2 fps
