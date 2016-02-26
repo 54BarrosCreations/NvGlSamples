@@ -38,10 +38,10 @@ import static com.jogamp.opengl.GL.GL_ELEMENT_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_FLOAT;
 import static com.jogamp.opengl.GL.GL_TRIANGLES;
 import static com.jogamp.opengl.GL.GL_UNSIGNED_BYTE;
+import static com.jogamp.opengl.GL.GL_UNSIGNED_INT;
 import static com.jogamp.opengl.GL.GL_UNSIGNED_SHORT;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
-import static gl4_kepler.bindlessApp.v00.Mesh.useVertexArray;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
@@ -67,7 +67,12 @@ public class Mesh {
     public static boolean setVertexFormatOnEveryDrawCall = false;
     public static int drawCallsPerState = 1;
     private int elementCount;
-    private static int bindingIndex = 0;
+    
+    private static class BindingIndex {
+
+        public static final int VERTEX = 0;
+        public static final int MESH_ID = 1;
+    }
 
     public Mesh() {
     }
@@ -140,12 +145,18 @@ public class Mesh {
 
         gl4.glVertexAttribFormat(Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex.PositionOffset);
         gl4.glVertexAttribFormat(Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true, Vertex.ColorOffset);
+        gl4.glVertexAttribFormat(Semantic.Attr.MESH_ID, 1, GL_UNSIGNED_INT, false, 0);
 
-        gl4.glVertexAttribBinding(Semantic.Attr.POSITION, bindingIndex);
-        gl4.glVertexAttribBinding(Semantic.Attr.COLOR, bindingIndex);
+        gl4.glVertexAttribBinding(Semantic.Attr.POSITION, BindingIndex.VERTEX);
+        gl4.glVertexAttribBinding(Semantic.Attr.COLOR, BindingIndex.VERTEX);
+        gl4.glVertexAttribBinding(Semantic.Attr.MESH_ID, BindingIndex.MESH_ID);
 
+        gl4.glVertexBindingDivisor(BindingIndex.VERTEX, 0);
+        gl4.glVertexBindingDivisor(BindingIndex.MESH_ID, 1);
+        
         gl4.glEnableVertexAttribArray(Semantic.Attr.POSITION);
         gl4.glEnableVertexAttribArray(Semantic.Attr.COLOR);
+        gl4.glEnableVertexAttribArray(Semantic.Attr.MESH_ID);
 
         if (useHeavyVertexFormat) {
 
@@ -155,11 +166,11 @@ public class Mesh {
             gl4.glVertexAttribFormat(Semantic.Attr.ATTR3, 4, GL_FLOAT, false, Vertex.Attrib3Offset);
             gl4.glVertexAttribFormat(Semantic.Attr.ATTR4, 4, GL_FLOAT, false, Vertex.Attrib4Offset);
 
-            gl4.glVertexAttribBinding(Semantic.Attr.ATTR0, bindingIndex);
-            gl4.glVertexAttribBinding(Semantic.Attr.ATTR1, bindingIndex);
-            gl4.glVertexAttribBinding(Semantic.Attr.ATTR2, bindingIndex);
-            gl4.glVertexAttribBinding(Semantic.Attr.ATTR3, bindingIndex);
-            gl4.glVertexAttribBinding(Semantic.Attr.ATTR4, bindingIndex);
+            gl4.glVertexAttribBinding(Semantic.Attr.ATTR0, BindingIndex.VERTEX);
+            gl4.glVertexAttribBinding(Semantic.Attr.ATTR1, BindingIndex.VERTEX);
+            gl4.glVertexAttribBinding(Semantic.Attr.ATTR2, BindingIndex.VERTEX);
+            gl4.glVertexAttribBinding(Semantic.Attr.ATTR3, BindingIndex.VERTEX);
+            gl4.glVertexAttribBinding(Semantic.Attr.ATTR4, BindingIndex.VERTEX);
 
             gl4.glEnableVertexAttribArray(Semantic.Attr.ATTR0);
             gl4.glEnableVertexAttribArray(Semantic.Attr.ATTR1);
@@ -171,7 +182,16 @@ public class Mesh {
 
     public void setVertexBuffers(GL4 gl4) {
 
-        gl4.glBindVertexBuffer(bindingIndex, bufferName.get(Buffer.VERTEX), 0, Vertex.SIZE);
+        gl4.glBindVertexBuffer(
+                BindingIndex.VERTEX, 
+                bufferName.get(Buffer.VERTEX), 
+                0, 
+                Vertex.SIZE);
+        gl4.glBindVertexBuffer(
+                BindingIndex.MESH_ID, 
+                BindlessApp.bufferName.get(BindlessApp.Buffer.MESH_ID), 
+                0, 
+                Integer.BYTES);
         gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
     }
 
@@ -179,12 +199,20 @@ public class Mesh {
      * Does the actual rendering of the mesh.
      *
      * @param gl4
+     * @param index
      */
-    public void render(GL4 gl4) {
+    public void render(GL4 gl4, int index) {
 
         // Do the actual drawing
         for (int i = 0; i < drawCallsPerState; i++) {
-            gl4.glDrawElements(GL_TRIANGLES, elementCount, GL_UNSIGNED_SHORT, 0);
+            gl4.glDrawElementsInstancedBaseVertexBaseInstance(
+                    GL_TRIANGLES,
+                    elementCount,
+                    GL_UNSIGNED_SHORT,
+                    0, // element offset
+                    1, // instance count
+                    0, // base vertex
+                    index); // base instance
         }
     }
     

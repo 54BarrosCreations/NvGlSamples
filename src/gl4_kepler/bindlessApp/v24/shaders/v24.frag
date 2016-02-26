@@ -1,5 +1,5 @@
 //----------------------------------------------------------------------------------
-// File:        gl4-kepler/BindlessApp/assets/shaders/simple_vertex.glsl
+// File:        gl4-kepler/BindlessApp/assets/shaders/simple_fragment.glsl
 // SDK Version: v2.11 
 // Email:       gameworks@nvidia.com
 // Site:        http://developer.nvidia.com/
@@ -33,23 +33,20 @@
 //----------------------------------------------------------------------------------
 #version 450
 
-#define POSITION    0
-#define COLOR       1
-#define PER_MESH    2
-// reserved
-#define ATTRIB0     4
-#define ATTRIB1     5
-#define ATTRIB2     6
-#define ATTRIB3     7
-#define ATTRIB4     8
-
-#define TRANSFORM   0
 #define CONSTANT    1
 
 #define BLOCK       0
 
+#define FRAG_COLOR  0
+
 layout(std140, column_major) uniform;
 layout(std430, column_major) buffer;
+
+// Uniforms
+layout (binding = CONSTANT) uniform Constant
+{
+    int renderTexture;
+} constant;
 
 struct PerMesh
 {
@@ -57,46 +54,20 @@ struct PerMesh
     vec2 uv;
 };
 
-// Input attributes
-layout (location = POSITION) in vec3 inPos;
-layout (location = COLOR) in vec4 inColor;
-layout (location = PER_MESH) in PerMesh perMesh;
-layout (location = ATTRIB0) in vec4 inAttrib0;
-layout (location = ATTRIB1) in vec4 inAttrib1; 
-layout (location = ATTRIB2) in vec4 inAttrib2; 
-layout (location = ATTRIB3) in vec4 inAttrib3; 
-layout (location = ATTRIB4) in vec4 inAttrib4; 
-
-// Uniforms
-layout (binding = TRANSFORM) uniform Transform
+// Inputs
+layout (location = BLOCK) in Block 
 {
-    mat4 modelViewProjection;
-} transform;
-
-layout (binding = CONSTANT) uniform Constant
-{
-    int renderTexture;
-} constant;
+    PerMesh perMesh;
+} inBlock;
 
 uniform sampler2D texture_;
 
-// Outputs
-layout (location = BLOCK) out Block
-{
-    PerMesh perMesh;
-} outBlock;
+layout (location = FRAG_COLOR) out vec4 fragColor;
 
-void main() 
-{
-    vec4 positionModelSpace = vec4(inPos, 1);
+void main() {
 
     if (constant.renderTexture > 0) 
-        positionModelSpace.y += texture(texture_, perMesh.uv).g;
+        fragColor = texture(texture_, inBlock.perMesh.uv);
     else 
-        positionModelSpace.y += sin(positionModelSpace.y * perMesh.color.r) * .2f;
-
-    gl_Position = transform.modelViewProjection * positionModelSpace;
-
-    outBlock.perMesh.color = vec4(inColor.rgb * perMesh.color.rgb, inColor.a);
-    outBlock.perMesh.uv = perMesh.uv;
+        fragColor = inBlock.perMesh.color;
 }

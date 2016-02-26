@@ -31,7 +31,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //----------------------------------------------------------------------------------
-package gl4_kepler.bindlessApp.v23;
+package gl4_kepler.bindlessApp.v24;
 
 import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_ELEMENT_ARRAY_BUFFER;
@@ -195,6 +195,19 @@ public class Mesh {
         gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
     }
 
+    public void setVertexBuffers(GL4 gl4, int perMeshArrayOffset) {
+
+        gl4.glBindVertexBuffer(BindingIndex.VERTEX, // binding
+                bufferName.get(Buffer.VERTEX), // array
+                0, // offset
+                Vertex.SIZE); // size
+        gl4.glBindVertexBuffer(BindingIndex.PER_MESH,
+                BindlessApp.bufferName.get(BindlessApp.Buffer.PER_MESH),
+                perMeshArrayOffset,
+                PerMesh.SIZE);
+        gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
+    }
+
     /**
      * Does the actual rendering of the mesh.
      *
@@ -213,12 +226,6 @@ public class Mesh {
                     1, // instance count
                     0, // base vertex
                     index); // base instance
-//            gl4.glDrawElementsInstanced(
-//                    GL_TRIANGLES, 
-//                    elementCount, 
-//                    GL_UNSIGNED_SHORT, 
-//                    0,
-//                    1);
         }
     }
 

@@ -92,7 +92,7 @@ void main()
 
     if (constant.renderTexture > 0) 
         positionModelSpace.y += texture(texture_, perMesh.uv).g;
-    else 
+    //else 
         positionModelSpace.y += sin(positionModelSpace.y * perMesh.color.r) * .2f;
 
     gl_Position = transform.modelViewProjection * positionModelSpace;

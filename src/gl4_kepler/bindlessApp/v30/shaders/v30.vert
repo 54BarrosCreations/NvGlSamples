@@ -37,7 +37,7 @@
 
 #define POSITION    0
 #define COLOR       1
-#define INDEX       2
+#define MESH_ID     2
 #define ATTRIB0     3
 #define ATTRIB1     4
 #define ATTRIB2     5
@@ -54,7 +54,7 @@ layout(std140, column_major) uniform;
 
 // Input attributes
 layout (location = POSITION) in vec3 inPos;
-layout (location = INDEX) in int inIndex;
+layout (location = MESH_ID) in int inMeshId;
 layout (location = COLOR) in vec4 inColor;
 layout (location = ATTRIB0) in vec4 inAttrib0;
 layout (location = ATTRIB1) in vec4 inAttrib1; 
@@ -74,14 +74,13 @@ layout (binding = CONSTANT) uniform Constant
     int renderTexture;
 } constant;
 
+uniform sampler2D texture_;
+
 struct PerMesh
 {
     vec4 color;
     vec2 uv;
 };
-
-uniform sampler2D texture_;
-
 // Outputs
 layout (location = BLOCK) out Block
 {
@@ -92,7 +91,7 @@ PerMesh updatePerMesh()
 {
     PerMesh perMesh;
 
-    if(inIndex == 0)
+    if(inMeshId == 0)
     {
         // Update uniforms for the "ground" mesh
         perMesh.color.r = 1.0f;
@@ -103,7 +102,7 @@ PerMesh updatePerMesh()
     else
     {
         // Compute the per mesh uniforms for this "building" mesh
-        int index = inIndex - 1;
+        int index = inMeshId - 1;
 
         float i = index / SQRT_BUILDING_COUNT;
         float j = index % SQRT_BUILDING_COUNT;
@@ -118,6 +117,7 @@ PerMesh updatePerMesh()
         perMesh.uv.x = j / SQRT_BUILDING_COUNT;
         perMesh.uv.y = 1 - i / SQRT_BUILDING_COUNT;
     }
+    return perMesh;
 }
 
 void main() 
@@ -133,6 +133,6 @@ void main()
 
     gl_Position = transform.modelViewProjection * positionModelSpace;
 
-    outBlock.color = vec4(inColor.rgb * perMesh.color.rgb, inColor.a);
-    outBlock.uv = perMesh.uv;
+    outBlock.perMesh.color = vec4(inColor.rgb * perMesh.color.rgb, inColor.a);
+    outBlock.perMesh.uv = perMesh.uv;
 }
