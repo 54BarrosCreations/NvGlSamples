@@ -33,6 +33,7 @@
 //----------------------------------------------------------------------------------
 package gl4_kepler.bindlessApp.v23;
 
+import glm.vec._4.Vec4;
 import java.nio.ByteBuffer;
 
 /**
@@ -74,4 +75,7 @@ public class PerMesh {
         fa[5] = v;
         return fa;
     }
+
+    public static final int ColorOffset = 0;
+    public static final int UvOffset = Vec4.SIZE;
 }

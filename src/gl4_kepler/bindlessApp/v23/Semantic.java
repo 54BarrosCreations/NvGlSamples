@@ -17,11 +17,13 @@ public class Semantic {
 
         public static final int POSITION = 0;
         public static final int COLOR = 1;
-        public static final int ATTR0 = 2;
-        public static final int ATTR1 = 3;
-        public static final int ATTR2 = 4;
-        public static final int ATTR3 = 5;
-        public static final int ATTR4 = 6;
+        public static final int PER_MESH_COLOR = 2;
+        public static final int PER_MESH_UV = 3;
+        public static final int ATTR0 = 4;
+        public static final int ATTR1 = 5;
+        public static final int ATTR2 = 6;
+        public static final int ATTR3 = 7;
+        public static final int ATTR4 = 8;
     }
 
     public static class Frag {
@@ -37,7 +39,6 @@ public class Semantic {
 
         public static final int TRANSFORM = 0;
         public static final int CONSTANT = 1;
-        public static final int PER_MESH = 2;
     }
 
     public static class Object {
@@ -54,10 +55,5 @@ public class Semantic {
 
         public static final int DIFFUSE = 0;
         public static final int PICKING = 1;
-    }
-    
-    public static class Storage {
-
-        public static final int PER_MESH = 0;
     }
 }

@@ -35,17 +35,16 @@
 
 #define POSITION    0
 #define COLOR       1
-#define PER_MESH    2
-#define ATTRIB0     3
-#define ATTRIB1     4
-#define ATTRIB2     5
-#define ATTRIB3     6
-#define ATTRIB4     7
+#define PER_MESH_COLOR    2
+#define PER_MESH_UV  3
+#define ATTRIB0     4
+#define ATTRIB1     5
+#define ATTRIB2     6
+#define ATTRIB3     7
+#define ATTRIB4     8
 
 #define TRANSFORM   0
 #define CONSTANT    1
-
-#define PER_MESH    0
 
 #define BLOCK       0
 
@@ -61,7 +60,8 @@ struct PerMesh
 // Input attributes
 layout (location = POSITION) in vec3 inPos;
 layout (location = COLOR) in vec4 inColor;
-layout (location = PER_MESH) in PerMesh perMesh;
+layout (location = PER_MESH_COLOR) in vec4 perMeshColor;
+layout (location = PER_MESH_UV) in vec2 perMeshUv;
 layout (location = ATTRIB0) in vec4 inAttrib0;
 layout (location = ATTRIB1) in vec4 inAttrib1; 
 layout (location = ATTRIB2) in vec4 inAttrib2; 
@@ -92,12 +92,12 @@ void main()
     vec4 positionModelSpace = vec4(inPos, 1);
 
     if (constant.renderTexture > 0) 
-        positionModelSpace.y += texture(texture_, perMesh.uv).g;
-    else 
-        positionModelSpace.y += sin(positionModelSpace.y * perMesh.color.r) * .2f;
+        positionModelSpace.y += texture(texture_, perMeshUv).g;
+    //else 
+        positionModelSpace.y += sin(positionModelSpace.y * perMeshColor.r) * .2f;
 
     gl_Position = transform.modelViewProjection * positionModelSpace;
 
-    outBlock.color = vec4(inColor.rgb * perMesh.color.rgb, inColor.a);
-    outBlock.uv = perMesh.uv;
+    outBlock.perMesh.color = vec4(inColor.rgb * perMeshColor.rgb, inColor.a);
+    outBlock.perMesh.uv = perMeshUv;
 }
