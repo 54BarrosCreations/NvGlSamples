@@ -123,11 +123,13 @@ void main()
     vec4 positionModelSpace = vec4(inPos, 1);
 
     PerMesh perMesh = calculatePerMesh();
-
+    float f=inMeshId;
     if (constant.renderTexture > 0) 
         positionModelSpace.y += texture(texture_, perMesh.uv).g;
     else 
-        positionModelSpace.y += sin(positionModelSpace.y * perMesh.color.r) * .2f;
+        //positionModelSpace.y += sin(positionModelSpace.y * perMesh.color.r) * .2f;
+        positionModelSpace.y += sin(f/0.5f);
+        //positionModelSpace.y = 20;
 
     gl_Position = transform.modelViewProjection * positionModelSpace;
 

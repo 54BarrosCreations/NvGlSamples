@@ -38,8 +38,8 @@ import static com.jogamp.opengl.GL.GL_ELEMENT_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_FLOAT;
 import static com.jogamp.opengl.GL.GL_TRIANGLES;
 import static com.jogamp.opengl.GL.GL_UNSIGNED_BYTE;
-import static com.jogamp.opengl.GL.GL_UNSIGNED_INT;
 import static com.jogamp.opengl.GL.GL_UNSIGNED_SHORT;
+import static com.jogamp.opengl.GL2ES2.GL_INT;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import java.nio.ByteBuffer;
@@ -145,7 +145,7 @@ public class Mesh {
 
         gl4.glVertexAttribFormat(Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex.PositionOffset);
         gl4.glVertexAttribFormat(Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true, Vertex.ColorOffset);
-        gl4.glVertexAttribFormat(Semantic.Attr.MESH_ID, 1, GL_UNSIGNED_INT, false, 0);
+        gl4.glVertexAttribFormat(Semantic.Attr.MESH_ID, 1, GL_INT, false, 0);
 
         gl4.glVertexAttribBinding(Semantic.Attr.POSITION, BindingIndex.VERTEX);
         gl4.glVertexAttribBinding(Semantic.Attr.COLOR, BindingIndex.VERTEX);
