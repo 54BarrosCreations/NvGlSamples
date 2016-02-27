@@ -38,7 +38,7 @@
 #define POSITION    0
 #define COLOR       1
 #define PER_MESH    2
-// reserved
+#define MESH_ID     3
 #define ATTRIB0     4
 #define ATTRIB1     5
 #define ATTRIB2     6
@@ -65,7 +65,7 @@ struct PerMesh
 layout (location = POSITION) in vec3 inPos;
 layout (location = COLOR) in vec4 inColor;
 layout (location = PER_MESH) in vec4 inPerMesh;
-layout (location = PER_MESH + 1) in vec4 inPerMesh_;
+layout (location = MESH_ID) in int inMeshId;
 layout (location = ATTRIB0) in vec4 inAttrib0;
 layout (location = ATTRIB1) in vec4 inAttrib1; 
 layout (location = ATTRIB2) in vec4 inAttrib2; 
@@ -76,6 +76,7 @@ layout (location = ATTRIB4) in vec4 inAttrib4;
 layout (binding = TRANSFORM) uniform Transform
 {
     mat4 modelViewProjection;
+    float time;
 } transform;
 
 layout (binding = CONSTANT) uniform Constant
@@ -115,7 +116,16 @@ PerMesh calculatePerMesh()
     PerMesh perMesh;
     
     float id = inPerMesh.x;
-    float t = inPerMesh.y;
+    //float id = inMeshId;
+
+    if(id == 0)
+    {
+        perMesh.color.rgb = vec3(1.0f);
+        perMesh.color.a = 0.0f;
+        perMesh.uv = vec2(0.0f);
+
+        return perMesh;
+    }
 
     float i = int(id) / SQRT_BUILDING_COUNT;
     float j = int(id) % SQRT_BUILDING_COUNT;
@@ -125,8 +135,8 @@ PerMesh calculatePerMesh()
 
     float radius = sqrt(x * x + z * z);
 
-    perMesh.color.r = sin(10.0f * radius + t);
-    perMesh.color.g = cos(10.0f * radius + t);
+    perMesh.color.r = sin(10.0f * radius + transform.time);
+    perMesh.color.g = cos(10.0f * radius + transform.time);
     perMesh.color.b = radius;
     perMesh.color.a = 0.0f;
     perMesh.uv.x = j / SQRT_BUILDING_COUNT;

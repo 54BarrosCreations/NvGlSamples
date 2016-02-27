@@ -18,7 +18,7 @@ public class Semantic {
         public static final int POSITION = 0;
         public static final int COLOR = 1;
         public static final int PER_MESH = 2;
-        // reserved
+        public static final int MESH_ID = 3;
         public static final int ATTR0 = 4;
         public static final int ATTR1 = 5;
         public static final int ATTR2 = 6;
