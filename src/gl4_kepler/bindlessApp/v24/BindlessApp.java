@@ -78,7 +78,7 @@ public class BindlessApp extends NvSampleApp {
     private int rbSectors = 3;
     private int rbId = 0;
     private long[] fence = new long[rbSectors];
-    
+
     public class Buffer {
 
         public static final int TRANSFORM = 0;
@@ -212,31 +212,36 @@ public class BindlessApp extends NvSampleApp {
             perMesh[0].a = 0.0f;
             perMesh[0].u = 0.0f;
             perMesh[0].v = 0.0f;
-            
+
             int offset = ((rbId + 1) % rbSectors) * rbSectorSize;
             perMesh[0].toBb(offset, perMeshPointer);
             // Compute the per mesh uniforms for all of the "building" meshes
             int index = 1;
-            for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
-                for (int j = 0; j < SQRT_BUILDING_COUNT; j++, index++) {
-                    
-                    float x, z, radius;
+//            for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
+//                for (int j = 0; j < SQRT_BUILDING_COUNT; j++, index++) {
+            for (int inMeshId = 1; inMeshId < meshes.length; inMeshId++, index++) {
 
-                    x = (float) i / SQRT_BUILDING_COUNT - 0.5f;
-                    z = (float) j / SQRT_BUILDING_COUNT - 0.5f;
-                    radius = (float) Math.sqrt((x * x) + (z * z));
+                float id = inMeshId - 1;
+                float x, z, radius;
 
-                    perMesh[index].r = (float) Math.sin(10.0f * radius + t);
-                    perMesh[index].g = (float) Math.cos(10.0f * radius + t);
-                    perMesh[index].b = radius;
-                    perMesh[index].a = 0.0f;
-                    perMesh[index].u = (float) j / SQRT_BUILDING_COUNT;
-                    perMesh[index].v = 1 - (float) i / SQRT_BUILDING_COUNT;
+                float i = id / SQRT_BUILDING_COUNT;
+                float j = id % SQRT_BUILDING_COUNT;
+                x = i / SQRT_BUILDING_COUNT - 0.5f;
+                z = j / SQRT_BUILDING_COUNT - 0.5f;
+                radius = (float) Math.sqrt((x * x) + (z * z));
 
-                    offset = ((rbId + 1) % rbSectors) * rbSectorSize + index * PerMesh.SIZE;
-                    perMesh[index].toBb(offset, perMeshPointer);
-                }
+                perMesh[index].r = (float) Math.sin(10.0f * radius + t);
+                perMesh[index].g = (float) Math.cos(10.0f * radius + t);
+                perMesh[index].b = radius;
+                perMesh[index].a = 0.0f;
+                perMesh[index].u = (float) j / SQRT_BUILDING_COUNT;
+                perMesh[index].v = 1 - (float) i / SQRT_BUILDING_COUNT;
+
+                offset = ((rbId + 1) % rbSectors) * rbSectorSize + index * PerMesh.SIZE;
+                perMesh[index].toBb(offset, perMeshPointer);
             }
+//                }
+//            }
 
         } else {
             // All meshes will use these uniforms
@@ -542,7 +547,7 @@ public class BindlessApp extends NvSampleApp {
         }
         fence[rbId] = gl4.glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
     }
-    
+
     @Override
     public void reshape(GL4 gl4, int x, int y, int width, int height) {
 

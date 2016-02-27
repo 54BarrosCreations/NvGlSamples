@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package gl4_kepler.bindlessApp.v30;
+package gl4_kepler.bindlessApp.v30_;
 
 import nvAppBase.*;
 
@@ -17,13 +17,12 @@ public class Semantic {
 
         public static final int POSITION = 0;
         public static final int COLOR = 1;
-        public static final int PER_MESH = 2;
-        // reserved
-        public static final int ATTR0 = 4;
-        public static final int ATTR1 = 5;
-        public static final int ATTR2 = 6;
-        public static final int ATTR3 = 7;
-        public static final int ATTR4 = 8;
+        public static final int MESH_ID = 2;
+        public static final int ATTR0 = 3;
+        public static final int ATTR1 = 4;
+        public static final int ATTR2 = 5;
+        public static final int ATTR3 = 6;
+        public static final int ATTR4 = 7;
     }
 
     public static class Frag {
@@ -39,6 +38,7 @@ public class Semantic {
 
         public static final int TRANSFORM = 0;
         public static final int CONSTANT = 1;
+        public static final int PER_MESH = 2;
     }
 
     public static class Object {

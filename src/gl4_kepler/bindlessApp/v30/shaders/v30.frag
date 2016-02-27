@@ -39,6 +39,9 @@
 
 #define FRAG_COLOR  0
 
+layout(std140, column_major) uniform;
+layout(std430, column_major) buffer;
+
 // Uniforms
 layout (binding = CONSTANT) uniform Constant
 {
@@ -49,6 +52,8 @@ struct PerMesh
 {
     vec4 color;
     vec2 uv;
+    float radius;
+    float t;
 };
 
 // Inputs

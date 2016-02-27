@@ -33,29 +33,39 @@
 //----------------------------------------------------------------------------------
 #version 450
 
-#define SQRT_BUILDING_COUNT     200
+#define SQRT_BUILDING_COUNT 200
 
 #define POSITION    0
 #define COLOR       1
-#define MESH_ID     2
-#define ATTRIB0     3
-#define ATTRIB1     4
-#define ATTRIB2     5
-#define ATTRIB3     6
-#define ATTRIB4     7
+#define PER_MESH    2
+// reserved
+#define ATTRIB0     4
+#define ATTRIB1     5
+#define ATTRIB2     6
+#define ATTRIB3     7
+#define ATTRIB4     8
 
 #define TRANSFORM   0
 #define CONSTANT    1
-#define PER_MESH    2
 
 #define BLOCK       0
 
 layout(std140, column_major) uniform;
+layout(std430, column_major) buffer;
+
+struct PerMesh
+{
+    vec4 color;
+    vec2 uv;
+    float radius;
+    float t;
+};
 
 // Input attributes
 layout (location = POSITION) in vec3 inPos;
-layout (location = MESH_ID) in int inMeshId;
 layout (location = COLOR) in vec4 inColor;
+layout (location = PER_MESH) in vec4 inPerMesh;
+layout (location = PER_MESH + 1) in vec4 inPerMesh_;
 layout (location = ATTRIB0) in vec4 inAttrib0;
 layout (location = ATTRIB1) in vec4 inAttrib1; 
 layout (location = ATTRIB2) in vec4 inAttrib2; 
@@ -66,7 +76,6 @@ layout (location = ATTRIB4) in vec4 inAttrib4;
 layout (binding = TRANSFORM) uniform Transform
 {
     mat4 modelViewProjection;
-    float time;
 } transform;
 
 layout (binding = CONSTANT) uniform Constant
@@ -76,63 +85,52 @@ layout (binding = CONSTANT) uniform Constant
 
 uniform sampler2D texture_;
 
-struct PerMesh
-{
-    vec4 color;
-    vec2 uv;
-};
 // Outputs
 layout (location = BLOCK) out Block
 {
     PerMesh perMesh;
 } outBlock;
 
-PerMesh calculatePerMesh()
-{
-    PerMesh perMesh;
-
-    if(inMeshId == 0)
-    {
-        // Update uniforms for the "ground" mesh
-        perMesh.color = vec4(1, 1, 1, 0);
-        perMesh.uv = vec2(0.0f, 0.0f);
-    } 
-    else
-    {
-        // Compute the per mesh uniforms for this "building" mesh
-        int index = inMeshId - 1;
-
-        float i = index / SQRT_BUILDING_COUNT;
-        float j = index % SQRT_BUILDING_COUNT;
-        float x = i / SQRT_BUILDING_COUNT - 0.5f;
-        float z = j / SQRT_BUILDING_COUNT - 0.5f;
-        float radius = sqrt((x * x) + (z * z));
-
-        perMesh.color.r = sin(10.0f * radius + transform.time);
-        perMesh.color.g = cos(10.0f * radius + transform.time);
-        perMesh.color.b = radius;
-        perMesh.color.a = 0.0f;
-        perMesh.uv.x = j / SQRT_BUILDING_COUNT;
-        perMesh.uv.y = 1 - i / SQRT_BUILDING_COUNT;
-    }
-    return perMesh;
-}
+PerMesh calculatePerMesh();
 
 void main() 
 {
     vec4 positionModelSpace = vec4(inPos, 1);
 
     PerMesh perMesh = calculatePerMesh();
-    float f=inMeshId;
+
     if (constant.renderTexture > 0) 
         positionModelSpace.y += texture(texture_, perMesh.uv).g;
     else 
-        //positionModelSpace.y += sin(positionModelSpace.y * perMesh.color.r) * .2f;
-        positionModelSpace.y += sin(f/0.5f);
-        //positionModelSpace.y = 20;
+        positionModelSpace.y += sin(positionModelSpace.y * perMesh.color.r) * .2f;
 
     gl_Position = transform.modelViewProjection * positionModelSpace;
 
     outBlock.perMesh.color = vec4(inColor.rgb * perMesh.color.rgb, inColor.a);
     outBlock.perMesh.uv = perMesh.uv;
+}
+
+PerMesh calculatePerMesh()
+{
+    PerMesh perMesh;
+    
+    float id = inPerMesh.x;
+    float t = inPerMesh.y;
+
+    float i = int(id) / SQRT_BUILDING_COUNT;
+    float j = int(id) % SQRT_BUILDING_COUNT;
+
+    float x = i / SQRT_BUILDING_COUNT - 0.5f;
+    float z = j / SQRT_BUILDING_COUNT - 0.5f;
+
+    float radius = sqrt(x * x + z * z);
+
+    perMesh.color.r = sin(10.0f * radius + t);
+    perMesh.color.g = cos(10.0f * radius + t);
+    perMesh.color.b = radius;
+    perMesh.color.a = 0.0f;
+    perMesh.uv.x = j / SQRT_BUILDING_COUNT;
+    perMesh.uv.y = 1 - i / SQRT_BUILDING_COUNT;
+
+    return perMesh;
 }

@@ -31,10 +31,9 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //----------------------------------------------------------------------------------
-package gl4_kepler.bindlessApp.v30;
+package gl4_kepler.bindlessApp.v30_;
 
-import glm.vec._4.Vec4;
-import java.nio.ByteBuffer;
+import gl4_kepler.bindlessApp.*;
 
 /**
  *
@@ -44,26 +43,12 @@ public class PerMesh {
 
     public float r, g, b, a, u, v;
 
-    public static final int COUNT = 8;
+    public static final int COUNT = 6;
     public static final int SIZE = COUNT * Float.BYTES;
     private float[] fa;
 
     public PerMesh() {
         fa = new float[6];
-    }
-
-    public void toBb(int offset, ByteBuffer bb) {
-        bb
-                .putFloat(offset + 0 * Float.BYTES, r)
-                .putFloat(offset + 1 * Float.BYTES, g)
-                .putFloat(offset + 2 * Float.BYTES, b)
-                .putFloat(offset + 3 * Float.BYTES, a)
-                .putFloat(offset + 4 * Float.BYTES, u)
-                .putFloat(offset + 5 * Float.BYTES, v);
-    }
-
-    public void toBb(ByteBuffer bb) {
-        bb.putFloat(r).putFloat(g).putFloat(b).putFloat(a).putFloat(u).putFloat(v);
     }
 
     public float[] toFa() {
@@ -75,7 +60,4 @@ public class PerMesh {
         fa[5] = v;
         return fa;
     }
-
-    public static final int ColorOffset = 0;
-    public static final int UvOffset = Vec4.SIZE;
 }
