@@ -38,8 +38,8 @@ import static com.jogamp.opengl.GL.GL_ELEMENT_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_FLOAT;
 import static com.jogamp.opengl.GL.GL_TRIANGLES;
 import static com.jogamp.opengl.GL.GL_UNSIGNED_BYTE;
+import static com.jogamp.opengl.GL.GL_UNSIGNED_INT;
 import static com.jogamp.opengl.GL.GL_UNSIGNED_SHORT;
-import static com.jogamp.opengl.GL2ES2.GL_INT;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
 import java.nio.ByteBuffer;
@@ -145,13 +145,13 @@ public class Mesh {
 
         gl4.glVertexAttribFormat(Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex.PositionOffset);
         gl4.glVertexAttribFormat(Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true, Vertex.ColorOffset);
-        gl4.glVertexAttribFormat(Semantic.Attr.PER_MESH, 4, GL_FLOAT, false, PerMesh.ColorOffset);
-        gl4.glVertexAttribFormat(Semantic.Attr.MESH_ID, 1, GL_INT, false, 0);
+        gl4.glVertexAttribFormat(Semantic.Attr.MESH_ID_F, 1, GL_FLOAT, false, 0);
+        gl4.glVertexAttribFormat(Semantic.Attr.MESH_ID_I, 1, GL_UNSIGNED_INT, false, 0);
 
         gl4.glVertexAttribBinding(Semantic.Attr.POSITION, BindingIndex.VERTEX);
         gl4.glVertexAttribBinding(Semantic.Attr.COLOR, BindingIndex.VERTEX);
-        gl4.glVertexAttribBinding(Semantic.Attr.PER_MESH, BindingIndex.PER_MESH);
-        gl4.glVertexAttribBinding(Semantic.Attr.MESH_ID, BindingIndex.MESH_ID);
+        gl4.glVertexAttribBinding(Semantic.Attr.MESH_ID_F, BindingIndex.PER_MESH);
+        gl4.glVertexAttribBinding(Semantic.Attr.MESH_ID_I, BindingIndex.MESH_ID);
 
         gl4.glVertexBindingDivisor(BindingIndex.VERTEX, 0);
         gl4.glVertexBindingDivisor(BindingIndex.PER_MESH, 1);
@@ -159,8 +159,8 @@ public class Mesh {
 
         gl4.glEnableVertexAttribArray(Semantic.Attr.POSITION);
         gl4.glEnableVertexAttribArray(Semantic.Attr.COLOR);
-        gl4.glEnableVertexAttribArray(Semantic.Attr.PER_MESH);
-        gl4.glEnableVertexAttribArray(Semantic.Attr.MESH_ID);
+        gl4.glEnableVertexAttribArray(Semantic.Attr.MESH_ID_F);
+        gl4.glEnableVertexAttribArray(Semantic.Attr.MESH_ID_I);
 
         if (useHeavyVertexFormat) {
 
@@ -191,11 +191,11 @@ public class Mesh {
                 0, // offset
                 Vertex.SIZE); // size
         gl4.glBindVertexBuffer(BindingIndex.PER_MESH,
-                BindlessApp.bufferName.get(BindlessApp.Buffer.PER_MESH),
+                BindlessApp.bufferName.get(BindlessApp.Buffer.MESH_ID_F),
                 0,
-                PerMesh.SIZE);
+                Float.BYTES);
         gl4.glBindVertexBuffer(BindingIndex.MESH_ID,
-                BindlessApp.bufferName.get(BindlessApp.Buffer.MESH_ID),
+                BindlessApp.bufferName.get(BindlessApp.Buffer.MESH_ID_I),
                 0,
                 Integer.BYTES);
         gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
@@ -248,8 +248,8 @@ public class Mesh {
 
         gl4.glDisableVertexAttribArray(Semantic.Attr.POSITION);
         gl4.glDisableVertexAttribArray(Semantic.Attr.COLOR);
-        gl4.glDisableVertexAttribArray(Semantic.Attr.PER_MESH);
-        gl4.glDisableVertexAttribArray(Semantic.Attr.MESH_ID);
+        gl4.glDisableVertexAttribArray(Semantic.Attr.MESH_ID_F);
+        gl4.glDisableVertexAttribArray(Semantic.Attr.MESH_ID_I);
 
         if (useHeavyVertexFormat) {
 

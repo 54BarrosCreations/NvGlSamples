@@ -220,8 +220,6 @@ public class BindlessApp extends NvSampleApp {
             int index = 1;
             for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
                 for (int j = 0; j < SQRT_BUILDING_COUNT; j++, index++) {
-//            for (int i = 0; i < 0; i++) {
-//                for (int j = 0; j < 0; j++, index++) {
                     
                     float x, z, radius;
 
@@ -240,7 +238,6 @@ public class BindlessApp extends NvSampleApp {
                     perMesh[index].toBb(offset, perMeshPointer);
                 }
             }
-//            perMeshPointer.rewind();
 
             gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.PER_MESH));
             {

@@ -37,8 +37,8 @@
 
 #define POSITION    0
 #define COLOR       1
-#define PER_MESH    2
-#define MESH_ID     3
+#define MESH_ID_F   2
+#define MESH_ID_I   3
 #define ATTRIB0     4
 #define ATTRIB1     5
 #define ATTRIB2     6
@@ -50,6 +50,8 @@
 
 #define BLOCK       0
 
+precision highp float;
+precision highp int;
 layout(std140, column_major) uniform;
 layout(std430, column_major) buffer;
 
@@ -64,8 +66,8 @@ struct PerMesh
 // Input attributes
 layout (location = POSITION) in vec3 inPos;
 layout (location = COLOR) in vec4 inColor;
-layout (location = PER_MESH) in vec4 inPerMesh;
-layout (location = MESH_ID) in int inMeshId;
+layout (location = MESH_ID_F) in float inPerMesh;
+layout (location = MESH_ID_I) in uint inMeshId;
 layout (location = ATTRIB0) in vec4 inAttrib0;
 layout (location = ATTRIB1) in vec4 inAttrib1; 
 layout (location = ATTRIB2) in vec4 inAttrib2; 
@@ -115,8 +117,8 @@ PerMesh calculatePerMesh()
 {
     PerMesh perMesh;
     
-    float id = inPerMesh.x;
-    //float id = inMeshId;
+    //float id = inPerMesh;
+    float id = inMeshId;
 
     if(id == 0)
     {

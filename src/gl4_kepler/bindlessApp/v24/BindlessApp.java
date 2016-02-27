@@ -217,31 +217,26 @@ public class BindlessApp extends NvSampleApp {
             perMesh[0].toBb(offset, perMeshPointer);
             // Compute the per mesh uniforms for all of the "building" meshes
             int index = 1;
-//            for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
-//                for (int j = 0; j < SQRT_BUILDING_COUNT; j++, index++) {
-            for (int inMeshId = 1; inMeshId < meshes.length; inMeshId++, index++) {
+            for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
+                for (int j = 0; j < SQRT_BUILDING_COUNT; j++, index++) {
+                    
+                    float x, z, radius;
 
-                float id = inMeshId - 1;
-                float x, z, radius;
+                    x = (float) i / SQRT_BUILDING_COUNT - 0.5f;
+                    z = (float) j / SQRT_BUILDING_COUNT - 0.5f;
+                    radius = (float) Math.sqrt((x * x) + (z * z));
 
-                float i = id / SQRT_BUILDING_COUNT;
-                float j = id % SQRT_BUILDING_COUNT;
-                x = i / SQRT_BUILDING_COUNT - 0.5f;
-                z = j / SQRT_BUILDING_COUNT - 0.5f;
-                radius = (float) Math.sqrt((x * x) + (z * z));
-
-                perMesh[index].r = (float) Math.sin(10.0f * radius + t);
-                perMesh[index].g = (float) Math.cos(10.0f * radius + t);
-                perMesh[index].b = radius;
-                perMesh[index].a = 0.0f;
-                perMesh[index].u = (float) j / SQRT_BUILDING_COUNT;
-                perMesh[index].v = 1 - (float) i / SQRT_BUILDING_COUNT;
+                    perMesh[index].r = (float) Math.sin(10.0f * radius + t);
+                    perMesh[index].g = (float) Math.cos(10.0f * radius + t);
+                    perMesh[index].b = radius;
+                    perMesh[index].a = 0.0f;
+                    perMesh[index].u = (float) j / SQRT_BUILDING_COUNT;
+                    perMesh[index].v = 1 - (float) i / SQRT_BUILDING_COUNT;
 
                 offset = ((rbId + 1) % rbSectors) * rbSectorSize + index * PerMesh.SIZE;
                 perMesh[index].toBb(offset, perMeshPointer);
+                }
             }
-//                }
-//            }
 
         } else {
             // All meshes will use these uniforms
