@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package gl4_kepler.bindlessApp.v30;
+package gl4_kepler.bindlessApp.v31;
 
+import gl4_kepler.bindlessApp.v30.*;
 import com.jogamp.common.util.Ringbuffer;
 import com.jogamp.newt.event.KeyEvent;
 import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
@@ -95,7 +96,7 @@ public class BindlessApp extends NvSampleApp {
     public void initRendering(GL4 gl4) {
 
         // Create our pixel and vertex shader
-        shader = NvGLSLProgram.createFromFiles(gl4, "src/gl4_kepler/bindlessApp/v30/shaders", "v30");
+        shader = NvGLSLProgram.createFromFiles(gl4, "src/gl4_kepler/bindlessApp/v31/shaders", "v31");
         // Set the initial view
         transformer.setRotationVec(new Vec3((float) Math.toRadians(30.0f), (float) Math.toRadians(30.0f), 0.0f));
 
