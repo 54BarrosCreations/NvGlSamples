@@ -3,28 +3,27 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package gl4_kepler.bindlessApp.v32;
+package gl4_kepler.bindlessApp.v32_;
 
-import gl4_kepler.bindlessApp.v30.*;
-import com.jogamp.common.util.Ringbuffer;
 import com.jogamp.newt.event.KeyEvent;
 import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_MAP_WRITE_BIT;
+import static com.jogamp.opengl.GL2ES2.GL_FRAGMENT_SHADER;
+import static com.jogamp.opengl.GL2ES2.GL_VERTEX_SHADER;
 import static com.jogamp.opengl.GL2ES3.GL_UNIFORM_BUFFER;
 import static com.jogamp.opengl.GL3ES3.*;
 import com.jogamp.opengl.GL4;
 import static com.jogamp.opengl.GL4.GL_MAP_COHERENT_BIT;
 import static com.jogamp.opengl.GL4.GL_MAP_PERSISTENT_BIT;
 import com.jogamp.opengl.util.GLBuffers;
-import dev.Vec2i8;
+import com.jogamp.opengl.util.glsl.ShaderCode;
+import com.jogamp.opengl.util.glsl.ShaderProgram;
 import glm.glm;
 import glm.mat._4.Mat4;
 import glm.vec._2.Vec2;
 import glm.vec._3.Vec3;
-import glm.vec._4.Vec4;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.logging.Level;
@@ -44,12 +43,29 @@ public class BindlessApp extends NvSampleApp {
     private final int SQRT_BUILDING_COUNT = 200;
     private final int TEXTURE_FRAME_COUNT = 180;
     private final float ANIMATION_DURATION = 5f;
+    private final String SHADERS_ROOT = "src/gl4_kepler/bindlessApp/v30/shaders";
+    private final String SHADERS_NAME = "v30";
+
+    public class Buffer {
+
+        public static final int TRANSFORM = 0;
+        public static final int CONSTANT = 1;
+        public static final int MESH_ID = 2;
+        public static final int MAX = 4;
+    }
+
+    public class Program {
+
+        public static final int GRAPHICS = 0;
+        public static final int COMPUTE = 1;
+        public static final int MAX = 3;
+    }
 
     // Simple collection of meshes to render
     private Mesh[] meshes;
 
     // Shader stuff
-    private NvGLSLProgram shader;
+    private int[] programName = new int[Program.MAX];
 
     // uniform buffer object (UBO) for tranform data
     private Mat4 projectionMat;
@@ -79,14 +95,6 @@ public class BindlessApp extends NvSampleApp {
 
     private RingBuffer transformRing;
 
-    public class Buffer {
-
-        public static final int TRANSFORM = 0;
-        public static final int CONSTANT = 1;
-        public static final int MESH_ID = 2;
-        public static final int MAX = 4;
-    }
-
     public BindlessApp(int width, int height) {
         super("BindlessApp");
 
@@ -96,8 +104,26 @@ public class BindlessApp extends NvSampleApp {
     @Override
     public void initRendering(GL4 gl4) {
 
+        IntBuffer data = GLBuffers.newDirectIntBuffer(8);
+        for (int index = 0; index < 3; index++) {
+            data.position(index);
+            gl4.glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, index, data);
+            data.position(3 + index);
+            gl4.glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, index, data);
+        }
+        data.position(6);
+        gl4.glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, data);
+        data.position(7);
+        gl4.glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, data);
+        System.out.println("GL_MAX_COMPUTE_WORK_GROUP_COUNT: (" + data.get(0) + ", " + data.get(1)
+                + ", " + data.get(2) + ")");
+        System.out.println("GL_MAX_COMPUTE_WORK_GROUP_SIZE: (" + data.get(3) + ", " + data.get(4)
+                + ", " + data.get(5) + ")");
+        System.out.println("GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS: " + data.get(6));
+        System.out.println("GL_MAX_COMPUTE_SHARED_MEMORY_SIZE: " + data.get(7));
+
         // Create our pixel and vertex shader
-        shader = NvGLSLProgram.createFromFiles(gl4, "src/gl4_kepler/bindlessApp/v32/shaders", "v32");
+        initPrograms(gl4);
         // Set the initial view
         transformer.setRotationVec(new Vec3((float) Math.toRadians(30.0f), (float) Math.toRadians(30.0f), 0.0f));
 
@@ -151,6 +177,41 @@ public class BindlessApp extends NvSampleApp {
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
+    private void initPrograms(GL4 gl4) {
+
+        {
+            ShaderProgram shaderProgram = new ShaderProgram();
+
+            ShaderCode vertShaderCode = ShaderCode.create(gl4, GL_VERTEX_SHADER, NvGLSLProgram.class, SHADERS_ROOT,
+                    null, SHADERS_NAME, "vert", null, true);
+            ShaderCode fragShaderCode = ShaderCode.create(gl4, GL_FRAGMENT_SHADER, NvGLSLProgram.class, SHADERS_ROOT,
+                    null, SHADERS_ROOT, "frag", null, true);
+
+            shaderProgram.add(vertShaderCode);
+            shaderProgram.add(fragShaderCode);
+
+            shaderProgram.init(gl4);
+
+            programName[Program.GRAPHICS] = shaderProgram.program();
+
+            shaderProgram.link(gl4, System.out);
+        }
+        {
+            ShaderProgram shaderProgram = new ShaderProgram();
+
+            ShaderCode compShaderCode = ShaderCode.create(gl4, GL_COMPUTE_SHADER, NvGLSLProgram.class, SHADERS_ROOT,
+                    null, SHADERS_NAME, "comp", null, true);
+
+            shaderProgram.add(compShaderCode);
+
+            shaderProgram.init(gl4);
+
+            programName[Program.COMPUTE] = shaderProgram.program();
+
+            shaderProgram.link(gl4, System.out);
+        }
+    }
+
     private void initBuffers(GL4 gl4) {
 
         gl4.glGenBuffers(Buffer.MAX, bufferName);
@@ -184,24 +245,12 @@ public class BindlessApp extends NvSampleApp {
 
         gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.MESH_ID));
         {
-            ByteBuffer meshIdBuffer = GLBuffers.newDirectByteBuffer(meshes.length * Vec2i8.SIZE);
-            // ground
-            meshIdBuffer.put((byte) 0xff).put((byte) 0xff);
-            for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
-                for (int j = 0; j < SQRT_BUILDING_COUNT; j++) {
-                    meshIdBuffer.put((byte) i).put((byte) j);
-                }
+            ByteBuffer meshIdBuffer = GLBuffers.newDirectByteBuffer(meshes.length * Integer.BYTES);
+            for (int i = 0; i < meshes.length; i++) {
+                meshIdBuffer.putInt(i * Integer.BYTES, i == 0 ? 0xffff : (i - 1));
             }
-            meshIdBuffer.rewind();
-            System.out.println("ground (" + (meshIdBuffer.get() & 0xff) + ", " + (meshIdBuffer.get() & 0xff) + ")");
-            for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
-                for (int j = 0; j < SQRT_BUILDING_COUNT; j++) {
-//                    System.out.println("(" + (meshIdBuffer.get() & 0xff) + ", " + (meshIdBuffer.get() & 0xff) + ")");
-                }
-            }
-            meshIdBuffer.rewind();
             gl4.glBufferStorage(GL_ARRAY_BUFFER,
-                    meshes.length * Vec2i8.SIZE,
+                    meshes.length * Integer.BYTES,
                     meshIdBuffer,
                     0);
             BufferUtils.destroyDirectBuffer(meshIdBuffer);

@@ -42,6 +42,7 @@ import static com.jogamp.opengl.GL.GL_UNSIGNED_SHORT;
 import static com.jogamp.opengl.GL2ES2.GL_INT;
 import com.jogamp.opengl.GL4;
 import com.jogamp.opengl.util.GLBuffers;
+import dev.Vec2i8;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
@@ -144,7 +145,7 @@ public class Mesh {
 
         gl4.glVertexAttribFormat(Semantic.Attr.POSITION, 3, GL_FLOAT, false, Vertex.PositionOffset);
         gl4.glVertexAttribFormat(Semantic.Attr.COLOR, 4, GL_UNSIGNED_BYTE, true, Vertex.ColorOffset);
-        gl4.glVertexAttribIFormat(Semantic.Attr.MESH_ID, 1, GL_INT, 0);
+        gl4.glVertexAttribIFormat(Semantic.Attr.MESH_ID, 2, GL_UNSIGNED_BYTE, 0);
 
         gl4.glVertexAttribBinding(Semantic.Attr.POSITION, BindingIndex.VERTEX);
         gl4.glVertexAttribBinding(Semantic.Attr.COLOR, BindingIndex.VERTEX);
@@ -188,7 +189,7 @@ public class Mesh {
         gl4.glBindVertexBuffer(BindingIndex.MESH_ID,
                 BindlessApp.bufferName.get(BindlessApp.Buffer.MESH_ID),
                 0,
-                Integer.BYTES);
+                Vec2i8.SIZE);
         gl4.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferName.get(Buffer.ELEMENT));
     }
 

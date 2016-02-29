@@ -184,6 +184,7 @@ public class BindlessApp extends NvSampleApp {
         {
             ByteBuffer meshIdBuffer = GLBuffers.newDirectByteBuffer(meshes.length * Integer.BYTES);
             for (int i = 0; i < meshes.length; i++) {
+                // 0xffff is for ground
                 meshIdBuffer.putInt(i * Integer.BYTES, i == 0 ? 0xffff : (i - 1));
             }
             gl4.glBufferStorage(GL_ARRAY_BUFFER,

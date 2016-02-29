@@ -16,6 +16,7 @@ import com.jogamp.opengl.GL4;
 import static com.jogamp.opengl.GL4.GL_MAP_COHERENT_BIT;
 import static com.jogamp.opengl.GL4.GL_MAP_PERSISTENT_BIT;
 import com.jogamp.opengl.util.GLBuffers;
+import dev.Vec2i8;
 import glm.glm;
 import glm.mat._4.Mat4;
 import glm.vec._2.Vec2;
@@ -183,12 +184,24 @@ public class BindlessApp extends NvSampleApp {
 
         gl4.glBindBuffer(GL_ARRAY_BUFFER, bufferName.get(Buffer.MESH_ID));
         {
-            ByteBuffer meshIdBuffer = GLBuffers.newDirectByteBuffer(meshes.length * Integer.BYTES);
-            for (int i = 0; i < meshes.length; i++) {
-                meshIdBuffer.putInt(i * Integer.BYTES, i == 0 ? 0xffff : (i - 1));
+            ByteBuffer meshIdBuffer = GLBuffers.newDirectByteBuffer(meshes.length * Vec2i8.SIZE);
+            // ground
+            meshIdBuffer.put((byte) 0xff).put((byte) 0xff);
+            for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
+                for (int j = 0; j < SQRT_BUILDING_COUNT; j++) {
+                    meshIdBuffer.put((byte) i).put((byte) j);
+                }
             }
+            meshIdBuffer.rewind();
+            System.out.println("ground (" + (meshIdBuffer.get() & 0xff) + ", " + (meshIdBuffer.get() & 0xff) + ")");
+            for (int i = 0; i < SQRT_BUILDING_COUNT; i++) {
+                for (int j = 0; j < SQRT_BUILDING_COUNT; j++) {
+//                    System.out.println("(" + (meshIdBuffer.get() & 0xff) + ", " + (meshIdBuffer.get() & 0xff) + ")");
+                }
+            }
+            meshIdBuffer.rewind();
             gl4.glBufferStorage(GL_ARRAY_BUFFER,
-                    meshes.length * Integer.BYTES,
+                    meshes.length * Vec2i8.SIZE,
                     meshIdBuffer,
                     0);
             BufferUtils.destroyDirectBuffer(meshIdBuffer);
@@ -379,7 +392,7 @@ public class BindlessApp extends NvSampleApp {
 
             //Wait until the gpu is no longer using the buffer
             transformRing.wait(gl4);
-            
+
             transformPointer.asFloatBuffer().put(mvpMat.toFa_());
 
             // If we are going to update the uniforms every frame, do it now
@@ -464,8 +477,6 @@ public class BindlessApp extends NvSampleApp {
         }
         currentFrame = (int) (180.0f * currentTime / ANIMATION_DURATION);
     }
-
-    
 
     @Override
     public void reshape(GL4 gl4, int x, int y, int width, int height) {
