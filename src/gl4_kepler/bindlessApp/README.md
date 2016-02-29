@@ -147,3 +147,20 @@ Features:
 - 3 ring buffer
 
 ~ 50.2 fps
+
+### Version 3.0
+
+Features:
+
+- moved `perMesh` calculations inside the vertex shader
+
+~ 65.0 fps, 15.30ms/frame
+
+### Version 3.1
+
+Features:
+
+- moved `perMesh` calculations inside the vertex shader
+- halfed data input from one integer (32b) to two unsigned bytes (2 * 8 = 16b)
+
+~ 64.3 fps, 15.48ms/frame
