@@ -5,8 +5,6 @@
  */
 package gl4_kepler.bindlessApp.v32;
 
-import gl4_kepler.bindlessApp.v30.*;
-import com.jogamp.common.util.Ringbuffer;
 import com.jogamp.newt.event.KeyEvent;
 import static com.jogamp.opengl.GL.GL_ARRAY_BUFFER;
 import static com.jogamp.opengl.GL.GL_MAP_WRITE_BIT;
@@ -21,10 +19,8 @@ import glm.glm;
 import glm.mat._4.Mat4;
 import glm.vec._2.Vec2;
 import glm.vec._3.Vec3;
-import glm.vec._4.Vec4;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.logging.Level;
