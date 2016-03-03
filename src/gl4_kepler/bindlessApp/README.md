@@ -164,3 +164,11 @@ Features:
 - halfed data input from one integer (32b) to two unsigned bytes (2 * 8 = 16b)
 
 ~ 64.3 fps, 15.48ms/frame
+
+### Version 3.2
+
+Features:
+
+- moved `perMesh` calculations inside a compute shader and then submitting the data as vertex attribute
+
+~ 64.1 fps, 15.48ms/frame
