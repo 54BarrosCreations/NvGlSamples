@@ -1,0 +1,50 @@
+#version 450 core
+#extension GL_ARB_compute_variable_group_size : require
+
+// Constant
+#define SQRT_BUILDING_COUNT 200
+// Uniform
+#define TRANSFORM   0
+// SSBO
+#define PER_MESH    0
+
+precision highp float;
+precision highp int;
+layout(std140, column_major) uniform;
+layout(std430, column_major) buffer;
+layout(local_size_variable) in;
+
+// Uniforms
+layout (binding = TRANSFORM) uniform Transform
+{
+    mat4 modelViewProjection;
+    float time;
+} transform;
+
+struct PerMesh
+{
+    vec4 color;
+    vec2 uv;
+};
+
+layout(binding = PER_MESH) buffer Buffer
+{
+    PerMesh perMesh[];
+} buffer_;
+
+void main()
+{	
+    float x = float(gl_WorkGroupID.x) / SQRT_BUILDING_COUNT - 0.5f;
+    float z = float(gl_LocalInvocationID.x) / SQRT_BUILDING_COUNT - 0.5f;
+
+    float radius = sqrt(x * x + z * z);
+
+    // we wanna skip the ground
+    uint index = gl_GlobalInvocationID.x + 1;
+    buffer_.perMesh[index].color.r = sin(10.0f * radius + transform.time);
+    buffer_.perMesh[index].color.g = cos(10.0f * radius + transform.time);
+    buffer_.perMesh[index].color.b = radius;
+    buffer_.perMesh[index].color.a = 0.0f;
+    buffer_.perMesh[index].uv.x = gl_LocalInvocationID.x / SQRT_BUILDING_COUNT;
+    buffer_.perMesh[index].uv.y = 1 - gl_WorkGroupID.x / SQRT_BUILDING_COUNT;
+}

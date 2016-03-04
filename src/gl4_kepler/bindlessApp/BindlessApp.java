@@ -73,7 +73,7 @@ public class BindlessApp extends NvSampleApp {
     private float minimumFrameDeltaTime = 1e6f;
 
     // Allocation
-    private boolean usePools = true;
+    private boolean usePools = false;
 
     public BindlessApp(int width, int height) {
         super("BindlessApp");

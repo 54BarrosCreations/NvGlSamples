@@ -33,6 +33,7 @@
 //----------------------------------------------------------------------------------
 package gl4_kepler.bindlessApp.v32;
 
+import glm.vec._2.Vec2;
 import glm.vec._4.Vec4;
 import java.nio.ByteBuffer;
 
@@ -49,6 +50,16 @@ public class PerMesh {
     private float[] fa;
 
     public PerMesh() {
+        fa = new float[6];
+    }
+
+    public PerMesh(Vec4 color, Vec2 uv) {
+        r = color.x;
+        g = color.y;
+        b = color.z;
+        a = color.w;
+        u = uv.x;
+        v = uv.y;
         fa = new float[6];
     }
 

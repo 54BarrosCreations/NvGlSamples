@@ -144,7 +144,7 @@ public class BindlessApp extends NvSampleApp {
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, bufferName.get(Buffer.TRANSFORM));
         transformPointer = gl4.glMapBufferRange(GL_UNIFORM_BUFFER,
                 0,
-                Transform.SIZE,
+                transformRing.size,
                 GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
@@ -379,8 +379,11 @@ public class BindlessApp extends NvSampleApp {
 
             //Wait until the gpu is no longer using the buffer
             transformRing.wait(gl4);
-            
-            transformPointer.asFloatBuffer().put(mvpMat.toFa_());
+
+            float[] mat = mvpMat.toFa_();
+            for (int i = 0; i < 16; i++) {
+                transformPointer.putFloat(transformRing.writeId * transformRing.sectorSize + i * Float.BYTES, mat[i]);
+            }
 
             // If we are going to update the uniforms every frame, do it now
             if (updateUniformsEveryFrame) {
@@ -397,12 +400,16 @@ public class BindlessApp extends NvSampleApp {
                 dt = Math.min(0.00005f / minimumFrameDeltaTime, .01f);
                 t += dt * Mesh.drawCallsPerState;
 
-                transformPointer.putFloat(Mat4.SIZE, t);
+                transformPointer.putFloat(transformRing.writeId * transformRing.sectorSize + Mat4.SIZE, t);
             }
         }
         gl4.glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        gl4.glBindBufferBase(GL_UNIFORM_BUFFER, Semantic.Uniform.TRANSFORM, bufferName.get(Buffer.TRANSFORM));
+        gl4.glBindBufferRange(GL_UNIFORM_BUFFER,
+                Semantic.Uniform.TRANSFORM,
+                bufferName.get(Buffer.TRANSFORM),
+                transformRing.bindId * transformRing.sectorSize,
+                transformRing.size);
         gl4.glBindBufferBase(GL_UNIFORM_BUFFER, Semantic.Uniform.CONSTANT, bufferName.get(Buffer.CONSTANT));
 
         if (renderTextures) {
@@ -464,8 +471,6 @@ public class BindlessApp extends NvSampleApp {
         }
         currentFrame = (int) (180.0f * currentTime / ANIMATION_DURATION);
     }
-
-    
 
     @Override
     public void reshape(GL4 gl4, int x, int y, int width, int height) {

@@ -38,12 +38,13 @@
 
 #define POSITION    0
 #define COLOR       1
-#define MESH_ID     2
-#define ATTRIB0     3
-#define ATTRIB1     4
-#define ATTRIB2     5
-#define ATTRIB3     6
-#define ATTRIB4     7
+#define PER_MESH    2
+// reserved
+#define ATTRIB0     4
+#define ATTRIB1     5
+#define ATTRIB2     6
+#define ATTRIB3     7
+#define ATTRIB4     8
 
 #define TRANSFORM   0
 #define CONSTANT    1
@@ -64,7 +65,8 @@ struct PerMesh
 // Input attributes
 layout (location = POSITION) in vec3 inPos;
 layout (location = COLOR) in vec4 inColor;
-layout (location = MESH_ID) in uvec2 inMeshId;
+layout (location = PER_MESH) in PerMesh inPerMesh;
+// reserved
 layout (location = ATTRIB0) in vec4 inAttrib0;
 layout (location = ATTRIB1) in vec4 inAttrib1; 
 layout (location = ATTRIB2) in vec4 inAttrib2; 
@@ -91,49 +93,17 @@ layout (location = BLOCK) out Block
     PerMesh perMesh;
 } outBlock;
 
-PerMesh calculatePerMesh();
-
 void main() 
 {
     vec4 positionModelSpace = vec4(inPos, 1);
 
-    PerMesh perMesh = calculatePerMesh();
-
     if (constant.renderTexture > 0) 
-        positionModelSpace.y += texture(texture_, perMesh.uv).g;
+        positionModelSpace.y += texture(texture_, inPerMesh.uv).g;
     else 
-        positionModelSpace.y += sin(positionModelSpace.y * perMesh.color.r) * .2f;
+        positionModelSpace.y += sin(positionModelSpace.y * inPerMesh.color.r) * .2f;
 
     gl_Position = transform.modelViewProjection * positionModelSpace;
 
-    outBlock.perMesh.color = vec4(inColor.rgb * perMesh.color.rgb, inColor.a);
-    outBlock.perMesh.uv = perMesh.uv;
-}
-
-PerMesh calculatePerMesh()
-{
-    PerMesh perMesh;
-
-    if(inMeshId == vec2(0xff))
-    {
-        perMesh.color.rgb = vec3(1.0f);
-        perMesh.color.a = 0.0f;
-        perMesh.uv = vec2(0.0f);
-
-        return perMesh;
-    }
-
-    float x = float(inMeshId.x) / SQRT_BUILDING_COUNT - 0.5f;
-    float z = float(inMeshId.y) / SQRT_BUILDING_COUNT - 0.5f;
-
-    float radius = sqrt(x * x + z * z);
-
-    perMesh.color.r = sin(10.0f * radius + transform.time);
-    perMesh.color.g = cos(10.0f * radius + transform.time);
-    perMesh.color.b = radius;
-    perMesh.color.a = 0.0f;
-    perMesh.uv.x = float(inMeshId.y) / SQRT_BUILDING_COUNT;
-    perMesh.uv.y = 1 - float(inMeshId.x) / SQRT_BUILDING_COUNT;
-
-    return perMesh;
+    outBlock.perMesh.color = vec4(inColor.rgb * inPerMesh.color.rgb, inColor.a);
+    outBlock.perMesh.uv = inPerMesh.uv;
 }
